@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>STATVERSE – Learn. Play. Solve. Level Up.</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050a24;--ink:#fff;--mut:#b7c3ee;--cy:#3fe0ff;--vi:#a78bfa;--mg:#ff5fd2;--gold:#ffd66b;--glass:rgba(255,255,255,.08);--solid:rgba(6,10,38,.82);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 'Be Vietnam Pro',system-ui,sans-serif;min-height:100vh}
+#sky{position:fixed;inset:0;z-index:-1;background:radial-gradient(60% 50% at 20% 20%,#5b2bd988,transparent),radial-gradient(50% 45% at 85% 30%,#0ea5e980,transparent),radial-gradient(45% 40% at 60% 90%,#ff5fd255,transparent),#050a24}
+canvas{position:fixed;inset:0;z-index:-1;width:100%;height:100%}
+.g{background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(190,170,255,.35);border-radius:20px;box-shadow:0 10px 40px #7c3aed40;transition:transform .25s,border-color .25s}
+.g.h:hover{transform:translateY(-4px) perspective(600px) rotateX(2deg);border-color:var(--cy)}
+.solid{background:var(--solid)}
+a,button{font:inherit;color:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
+.btn{border:1px solid rgba(255,255,255,.3);background:var(--glass);border-radius:999px;padding:.6rem 1.3rem;font-weight:600}
+.btn:hover{border-color:var(--cy)}
+.pri{background:linear-gradient(90deg,#7c3aed,#06b6d4);border:0}
+.view{display:none;max-width:1100px;margin:0 auto;padding:1.5rem 1rem 4rem}
+.view.on{display:block}
+h1{font-size:clamp(2rem,6vw,3.6rem);line-height:1.15;margin:.4em 0;font-weight:800}
+h2{margin:.2em 0 .6em}
+nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:none;gap:.4rem;align-items:center;flex-wrap:wrap;padding:.5rem .8rem;margin:.5rem;background:var(--solid);backdrop-filter:blur(20px)}
+nav.on{display:flex}
+nav a{padding:.35rem .7rem;border-radius:999px;cursor:pointer;font-size:.88rem;white-space:nowrap}
+nav a:hover{background:var(--glass)}
+.logo{font-weight:800;font-size:1.15rem;cursor:pointer;margin-right:.5rem}
+.sp{flex:1}
+.three{border:1px solid var(--vi);border-radius:999px;display:flex;gap:.2rem;padding:.15rem}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem}
+.card{padding:1.4rem}
+.ic{font-size:2rem}
+input,textarea,select{width:100%;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.3);border-radius:12px;color:#fff;padding:.7rem;font:inherit}
+textarea{min-height:130px;resize:vertical}
+label{display:block;margin:.7rem 0 .2rem;color:var(--mut);font-size:.9rem}
+.err{color:#ff9ab0;min-height:1.3em;font-size:.9rem}
+.ok{color:#7dffb3}
+.note{background:#ffd66b22;border:1px solid var(--gold);border-radius:12px;padding:.6rem .9rem;margin:.8rem 0;font-size:.92rem}
+.row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin:.8rem 0}
+.pal{display:flex;gap:.3rem;flex-wrap:wrap;margin:.5rem 0}
+.pal button{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:8px;min-width:2.3rem;padding:.2rem .5rem}
+.tabs button.on,.opt.on{background:linear-gradient(90deg,#7c3aed,#06b6d4);border-color:transparent}
+.opt{display:block;width:100%;text-align:left;margin:.4rem 0;padding:.8rem 1rem;border-radius:14px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.08)}
+.steps{display:flex;gap:.4rem;margin-bottom:1rem}
+.steps i{flex:1;height:5px;border-radius:5px;background:rgba(255,255,255,.2)}
+.steps i.on{background:var(--cy)}
+.sol{padding:1.2rem;overflow-x:auto}
+.sol h3{color:var(--cy);margin:1rem 0 .3rem;font-size:1.05rem}
+.ans{background:#3fe0ff22;border:1px solid var(--cy);border-radius:12px;padding:.7rem 1rem}
+mjx-container{max-width:100%;overflow-x:auto;overflow-y:hidden}
+table{border-collapse:collapse;font-size:.82rem;min-width:620px}
+td,th{border:1px solid rgba(255,255,255,.25);padding:.25rem .45rem;text-align:center}
+th{background:#7c3aed55}
+.scroll{overflow-x:auto;max-height:420px}
+.map{display:flex;flex-wrap:wrap;gap:1.2rem;align-items:center;justify-content:center;padding:1rem}
+.node{width:78px;height:78px;border-radius:50%;display:grid;place-items:center;text-align:center;font-size:.72rem;border:2px solid;cursor:pointer;line-height:1.2;padding:.3rem}
+.node.ready{border-color:var(--cy);box-shadow:0 0 18px var(--cy)}
+.node.done{border-color:var(--gold);background:#ffd66b33}
+.node.lock{border-color:#667;opacity:.55}
+.bar{height:10px;border-radius:10px;background:rgba(255,255,255,.15);overflow:hidden}
+.bar b{display:block;height:100%;background:linear-gradient(90deg,var(--cy),var(--mg))}
+.fx{position:fixed;right:1rem;bottom:calc(1rem + env(safe-area-inset-bottom,0px));z-index:30}
+.chat{position:fixed;right:1rem;bottom:calc(4.5rem + env(safe-area-inset-bottom,0px));width:min(320px,90vw);z-index:30;padding:1rem;display:none}
+.toast{position:fixed;left:50%;top:calc(4rem + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:50;padding:.6rem 1.2rem;border-radius:999px;background:#111a4a;border:1px solid var(--cy);display:none}
+footer{text-align:center;font-size:.75rem;color:var(--mut);padding:1rem}
+.dice{width:120px;height:120px;margin:1.5rem auto;perspective:500px}
+.cube{width:100%;height:100%;position:relative;transform-style:preserve-3d;animation:spin 6s linear infinite}
+.cube div{position:absolute;inset:0;border:2px solid var(--cy);background:#3fe0ff22;display:grid;place-items:center;font-size:2.2rem;border-radius:14px}
+.cube div:nth-child(1){transform:translateZ(60px)}.cube div:nth-child(2){transform:rotateY(90deg) translateZ(60px)}.cube div:nth-child(3){transform:rotateY(180deg) translateZ(60px)}.cube div:nth-child(4){transform:rotateY(-90deg) translateZ(60px)}.cube div:nth-child(5){transform:rotateX(90deg) translateZ(60px)}.cube div:nth-child(6){transform:rotateX(-90deg) translateZ(60px)}
+@keyframes spin{to{transform:rotateX(360deg) rotateY(360deg)}}
+@media(prefers-reduced-motion:reduce){.cube{animation:none}*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="sky"></div><canvas id="cv"></canvas>
+<div class="toast" id="toast" role="status"></div>
+
+<nav class="g" id="nav">
+ <span class="logo" onclick="go('home')">∑ STATVERSE</span>
+ <a onclick="go('home','feat')">Giải Toán &amp; Đồ Thị</a>
+ <a onclick="go('proc')">Quy Trình 4 Bước</a>
+ <a onclick="go('laplace')">Giá Trị Hàm Laplace</a>
+ <a onclick="go('casio')">Casio FX-580</a>
+ <a onclick="go('trap')">Luyện Bẫy Thi</a><a onclick="go('viva')">Vấn đáp</a>
+ <span class="three"><a onclick="go('solve')">Giải bài</a><a onclick="go('game')">Chơi trò chơi</a><a onclick="go('review')">Ôn tập</a></span>
+ <span class="sp"></span>
+ <a id="acc" onclick="go('login')">👤 Khách</a>
+ <button class="btn pri" onclick="go('solve')">Giải Đề Ngay</button>
+</nav>
+
+<!-- WELCOME -->
+<section class="view on" id="v-welcome">
+ <div class="row" style="justify-content:flex-end"><button class="btn" onclick="go('home')">Bỏ qua giới thiệu</button></div>
+ <div class="grid3" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr));align-items:center">
+  <div>
+   <p style="color:var(--cy);margin:0">BEYOND THE KNOWN UNIVERSE</p>
+   <h1>Mỗi con số mở ra một bí ẩn</h1>
+   <p style="color:var(--mut)">Bước vào hành trình chinh phục những quy luật ngẫu nhiên, khám phá bí ẩn của dữ liệu và mở ra những chân trời tri thức mới cùng AI</p>
+   <p><b>Learn. Play. Solve. Level Up.</b></p>
+   <div class="row"><button class="btn pri" onclick="go('login','reg')">Bắt đầu khám phá</button><button class="btn" onclick="go('login','in')">Tôi đã có tài khoản</button><button class="btn" onclick="guest()">Tài khoản khách</button></div>
+  </div>
+  <div>
+   <div class="dice"><div class="cube"><div>⚀</div><div>⚁</div><div>⚂</div><div>⚃</div><div>⚄</div><div>⚅</div></div></div>
+   <div class="row" style="justify-content:center"><span class="g" style="padding:.3rem .9rem">Interactive Learning</span><span class="g" style="padding:.3rem .9rem">Step-by-step Solutions</span><span class="g" style="padding:.3rem .9rem">Smart Practice</span></div>
+  </div>
+ </div>
+</section>
+
+<!-- LOGIN -->
+<section class="view" id="v-login">
+ <div style="text-align:center"><div class="logo" style="font-size:1.8rem">∑ STATVERSE</div><div style="color:var(--mut)">Learn. Play. Solve. Level Up.</div></div>
+ <div class="g solid card" style="max-width:420px;margin:1.2rem auto">
+  <div class="note">Chế độ demo: chưa có máy chủ xác thực. Tài khoản chỉ tồn tại trong phiên này và mật khẩu không được lưu.</div>
+  <h2 id="ltitle">Đăng nhập</h2>
+  <label for="u">Tên người dùng</label><input id="u" autocomplete="username">
+  <label for="p">Mật khẩu</label><input id="p" type="password" autocomplete="current-password">
+  <label><input type="checkbox" style="width:auto" onchange="p.type=this.checked?'text':'password';p2.type=p.type"> Hiện mật khẩu</label>
+  <div id="rg" style="display:none"><label for="p2">Xác nhận mật khẩu</label><input id="p2" type="password"></div>
+  <div class="err" id="lerr" role="alert"></div>
+  <button class="btn pri" id="lgo" style="width:100%" onclick="auth()">Đăng nhập</button>
+  <p style="text-align:center"><a href="#" id="lsw" onclick="event.preventDefault();lmode(mode=='in'?'reg':'in')">Chưa có tài khoản? Đăng ký</a></p>
+ </div>
+</section>
+
+<!-- HOME -->
+<section class="view" id="v-home">
+ <div class="g card" style="text-align:center;padding:2.5rem 1rem">
+  <p style="color:var(--cy);margin:0">Nền Tảng Toán Xác Suất Thống Kê Chuẩn Đại Học</p>
+  <h1>Giải Toán &amp; Trực Quan Hóa<br>Phân Phối Chuẩn &amp; Xác Suất</h1>
+  <p style="color:var(--mut);max-width:680px;margin:0 auto 1rem">Tự động hỗ trợ giải bài tập, phân tích từng bước và giúp sinh viên hiểu rõ bản chất kiến thức Xác suất Thống kê thông qua trải nghiệm học tập trực quan, chủ động và dễ hiểu.</p>
+  <div class="row" style="justify-content:center"><button class="btn pri" onclick="go('solve')">Thử Bộ Giải Tự Động ✨</button><button class="btn" onclick="go('casio')">Thử Bài Máy Casio 580</button></div>
+ </div>
+ <div id="feat" class="grid3" style="margin-top:1.2rem">
+  <div class="g h card"><div class="ic">🧠</div><h2>Giải bài</h2><p>Nhập đề, chụp ảnh hoặc tải tệp lên để nhận hướng dẫn giải bài tập Xác suất Thống kê từng bước.</p><button class="btn pri" onclick="go('solve')">Bắt đầu giải bài</button></div>
+  <div class="g h card"><div class="ic">🎮</div><h2>Chơi trò chơi</h2><p>Củng cố kiến thức Xác suất Thống kê qua bản đồ trò chơi, các câu hỏi thử thách và hành trình chinh phục từng level.</p><button class="btn pri" onclick="go('game')">Chơi ngay</button></div>
+  <div class="g h card"><div class="ic">📈</div><h2>Ôn tập</h2><p>Nhìn lại kiến thức đã học, nhận diện lỗi sai và khám phá những nội dung cần củng cố thêm.</p><button class="btn pri" onclick="go('review')">Xem ôn tập</button></div>
+ </div>
+</section>
+
+<!-- PROCESS -->
+<section class="view" id="v-proc">
+ <button class="btn" onclick="go('home')">← Trang chủ</button>
+ <h1 style="font-size:2rem">Quy trình giải toán 4 bước</h1>
+ <div class="grid3">
+  <div class="g solid card"><h2>Bước 1: Tìm hiểu đề</h2><p>Xác định dữ kiện, yêu cầu cần tìm; dùng công thức, ký hiệu để diễn tả đề; phân biệt các điều kiện.</p></div>
+  <div class="g solid card"><h2>Bước 2: Xây dựng chương trình giải</h2><p>Phân tích thành bài toán quen thuộc, chọn kiến thức và phương pháp phù hợp với dạng toán.</p></div>
+  <div class="g solid card"><h2>Bước 3: Trình bày lời giải</h2><p>Trình bày theo trình tự logic, rõ ràng; dùng công thức, phép tính và lập luận phù hợp.</p></div>
+  <div class="g solid card"><h2>Bước 4: Kiểm tra và nghiên cứu</h2><p>Kiểm tra kết quả và lập luận; rút ra phương pháp; tìm cách giải khác, bài toán tương tự hoặc khái quát hóa.</p></div>
+ </div>
+</section>
+
+<!-- LAPLACE -->
+<section class="view" id="v-laplace">
+ <button class="btn" onclick="go('home')">← Trang chủ</button>
+ <h1 style="font-size:2rem">Giá trị hàm Laplace</h1>
+ <p style="color:var(--mut)">Bảng hàm phân phối chuẩn tắc \(\Phi(z)=P(Z\le z)\), với \(Z\sim N(0,1)\). Hàng: phần nguyên và phần chục của \(z\); cột: số hàng phần trăm. Giá trị được tính bằng công thức, làm tròn 4 chữ số; với \(z<0\) dùng \(\Phi(-z)=1-\Phi(z)\).</p>
+ <div class="g solid scroll"><table id="lt"></table></div>
+</section>
+
+<!-- SOLVE -->
+<section class="view" id="v-solve">
+ <button class="btn" onclick="go('home')">← Trang chủ</button>
+ <h1 style="font-size:2rem">AI BUDDY – SOLVE</h1>
+ <div class="steps" id="stp"><i></i><i></i><i></i><i></i><i></i></div>
+ <div class="g solid card">
+  <div id="s1">
+   <p>Chào bạn! Hãy gửi bài tập Xác suất Thống kê mà bạn cần hỗ trợ nhé.</p>
+   <div class="row tabs" id="tabs"><button class="btn on" data-t="t">⌨ Nhập đề</button><button class="btn" data-t="c">📷 Chụp ảnh</button><button class="btn" data-t="f">📎 Tải tệp</button></div>
+   <div id="pt">
+    <div class="pal" id="pal"></div>
+    <textarea id="prob" placeholder="Gõ đề bài. Công thức đặt trong \( ... \), ví dụ \(X\sim N(\mu,\sigma^2)\)"></textarea>
+    <div class="row"><button class="btn" onclick="sample()">Dùng đề mẫu</button><button class="btn" id="mic" onclick="voice()">🎤 Ghi âm đề</button><button class="btn" onclick="prob.value='';">Xóa</button><button class="btn pri" onclick="confirmP()">Tiếp tục</button></div>
+   </div>
+   <div id="pc" style="display:none"><input type="file" id="img" accept="image/*" capture="environment"><div id="prv"></div></div>
+   <div id="pf" style="display:none"><input type="file" id="fl" accept=".pdf,image/*"><div id="fi"></div></div>
+   <div id="cf" style="display:none"><h3>Đề bài đã nhận – kiểm tra giúp mình nhé</h3><div class="sol" id="cfv" style="border:1px dashed var(--cy);border-radius:12px"></div><p style="color:var(--mut)">Hãy kiểm tra dấu âm/dương, số mũ, chỉ số dưới, phân số, căn, ký hiệu Hy Lạp và điều kiện. Chưa đúng thì sửa lại trong khung nhập.</p><div class="row"><button class="btn" onclick="cf.style.display='none'">Sửa đề</button><button class="btn pri" onclick="step(2)">Đúng rồi, tiếp tục</button></div></div>
+   <div class="err" id="e1" role="alert"></div>
+  </div>
+  <div id="s2" style="display:none"><h2>Bạn đã hiểu đề bài đến đâu?</h2>
+   <div id="lv"><button class="opt">Tôi chưa hiểu đề bài.</button><button class="opt">Tôi hiểu đề nhưng chưa biết cách làm.</button><button class="opt">Tôi đã làm thử nhưng chưa chắc chắn.</button><button class="opt">Tôi muốn xem lời giải đầy đủ.</button></div>
+   <div class="row"><button class="btn" onclick="step(1)">Quay lại</button><button class="btn pri" onclick="step(3)">Tiếp tục</button></div></div>
+  <div id="s3" style="display:none"><h2>Chọn chế độ hỗ trợ</h2>
+   <div class="grid3" id="md"><button class="opt" data-m="hint"><b>💡 Gợi ý</b><br>Kiến thức và công thức liên quan, chưa lộ lời giải.</button><button class="opt" data-m="guide"><b>🧭 Hướng dẫn</b><br>Phân tích đề và hướng dẫn từng bước.</button><button class="opt" data-m="check"><b>✅ Kiểm tra</b><br>Nhập đáp án của bạn để đối chiếu.</button><button class="opt" data-m="full"><b>📘 Giải đầy đủ</b><br>Lời giải chi tiết từ đầu đến cuối.</button></div>
+   <div class="row"><button class="btn" onclick="step(2)">Quay lại</button></div></div>
+  <div id="s4" style="display:none">
+   <div class="row tabs" id="mt"></div>
+   <div class="note" id="demo"></div>
+   <div class="sol" id="out"></div>
+   <div class="row"><button class="btn" onclick="step(3)">Đổi chế độ</button><button class="btn pri" onclick="step(5)">Xong bước giải</button></div></div>
+  <div id="s5" style="display:none;text-align:center"><h2>Bạn có muốn luyện tập thêm về dạng bài này không?</h2>
+   <div class="row" style="justify-content:center"><button class="btn" onclick="go('home')">Không – Quay về trang chủ</button><button class="btn pri" onclick="practice()">Có – Chơi trò chơi</button></div></div>
+ </div>
+</section>
+
+<section class="view" id="v-viva"><button class="btn" onclick="go('home')">← Trang chủ</button><h1 style="font-size:2rem">Vấn đáp lý thuyết</h1><div class="g solid card"><div id="vset"><label for="vt">Chủ đề / chương</label><input id="vt" placeholder="vd: Phân phối chuẩn"><label for="vn">Số câu</label><select id="vn"><option>3</option><option selected>5</option><option>8</option></select><label for="vl">Mức độ</label><select id="vl"><option>cơ bản</option><option>vận dụng</option><option>nâng cao</option></select><div class="row"><button class="btn pri" onclick="vStart()">Bắt đầu vấn đáp</button></div></div><div id="vlog" style="display:none"></div><div id="vin" style="display:none"><textarea id="va" placeholder="Trả lời của bạn…" style="min-height:80px"></textarea><div class="row"><button class="btn pri" onclick="vSend()">Gửi</button><button class="btn" id="vm" onclick="vVoice()">🎤 Nói</button><button class="btn" onclick="vSend('gợi ý')">Gợi ý</button><button class="btn" onclick="vSend('bỏ qua')">Bỏ qua</button><button class="btn" onclick="vSend('dừng')">Dừng &amp; báo cáo</button></div></div></div></section>
+<section class="view" id="v-casio"><button class="btn" onclick="go('home')">← Trang chủ</button><h1 style="font-size:2rem">Casio FX-580</h1><div class="g solid card"><label for="ct">Dạng bài</label><select id="ct" onchange="casioForm()"><option value="n">Phân phối chuẩn: P(a &lt; X &lt; b)</option><option value="b">Phân phối nhị thức</option><option value="s">Trung bình và độ lệch chuẩn từ dữ liệu</option></select><div id="cf2"></div><div class="row"><button class="btn pri" onclick="casioRun()">Tính</button><button class="btn" onclick="casioAI()">Hướng dẫn bấm máy (AI)</button></div><div id="cout" class="sol"></div></div><div class="note">Kết quả được tính trực tiếp bằng công thức trong trang. Hướng dẫn bấm phím do AI viết, hãy đối chiếu với sách hướng dẫn của máy.</div></section>
+<section class="view" id="v-trap"><button class="btn" onclick="go('home')">← Trang chủ</button><h1 style="font-size:2rem">Luyện Bẫy Thi</h1><div class="g solid card"><p>AI tạo câu trắc nghiệm chứa các "bẫy" thường gặp trong đề thi; sau mỗi câu bạn thấy bẫy đó là gì.</p><label for="tt">Chủ đề</label><input id="tt" placeholder="vd: Phân phối chuẩn"><label for="tn">Số câu</label><select id="tn"><option>3</option><option selected>5</option></select><div class="row"><button class="btn pri" onclick="genTrap()">Tạo đề luyện bẫy</button></div></div><div id="tslot"></div></section>
+<!-- GAME -->
+<section class="view" id="v-game">
+ <button class="btn" onclick="go('home')">← Quay về trang chủ</button>
+ <h1 style="font-size:2rem">Chơi trò chơi – Chinh phục Xác suất Thống kê</h1>
+ <p style="color:var(--mut)">Học qua từng thử thách, củng cố kiến thức và chinh phục các level.</p>
+ <div id="quiz" class="g solid card" style="display:none;margin-top:1rem"></div>
+ <div class="g card" id="gift" style="display:none;border-color:var(--gold)"><b>Cùng luyện tập thêm dạng bài bạn vừa học nhé!</b><br><span id="gt"></span></div>
+ <div class="g solid card" style="margin-top:1rem"><h2>Chương 1 – Kiến thức cơ bản</h2><div class="map" id="map"></div>
+  <div class="row"><button class="btn pri" onclick="playNext()">Bắt đầu chơi</button><span>Điểm tích lũy: <b id="pts">0</b></span></div></div>
+ <div class="g card" style="margin-top:1rem"><h2>Achievements</h2><div id="ach"></div></div>
+</section>
+
+<!-- REVIEW -->
+<section class="view" id="v-review">
+ <button class="btn" onclick="go('home')">← Quay về trang chủ</button>
+ <h1 style="font-size:2rem">Ôn tập – Theo dõi hành trình học tập</h1>
+ <p style="color:var(--mut)">Nhìn lại những gì bạn đã học, nhận biết lỗi sai và xác định kiến thức cần ôn tập tiếp theo.</p>
+ <div class="note" id="rnote"></div>
+ <div class="grid3">
+  <div class="g solid card h"><h2>Hôm nay bạn đã học gì?</h2><div id="rlog"></div></div>
+  <div class="g solid card h"><h2>Bạn thường sai ở đâu?</h2><div class="bar"><b style="width:45%"></b></div><small>Nhầm công thức 45%</small><div class="bar" style="margin-top:.5rem"><b style="width:30%"></b></div><small>Sai phép tính 30%</small><div class="bar" style="margin-top:.5rem"><b style="width:25%"></b></div><small>Chưa hiểu yêu cầu 25%</small><p style="color:var(--gold);font-size:.8rem">Dữ liệu mẫu</p></div>
+  <div class="g solid card h"><h2>Bạn nên ôn tập gì?</h2><ul><li>Chuẩn hóa \(Z=\frac{X-\mu}{\sigma}\)</li><li>Tra bảng \(\Phi(z)\)</li><li>\(P(A\mid B)\)</li></ul><button class="btn pri" onclick="go('solve')">Ôn lại ngay</button> <button class="btn" onclick="go('game')">Làm bài ngay</button><p style="color:var(--gold);font-size:.8rem">Danh sách mẫu</p></div>
+ </div>
+</section>
+
+<footer>© Nhóm 3 - D01</footer>
+<button class="btn pri fx" onclick="chat.style.display=chat.style.display=='block'?'none':'block'" aria-label="Chatbot AI">💬 Chatbot AI</button>
+<div class="g solid chat" id="chat"><b>Chatbot AI</b><p style="font-size:.9rem;color:var(--mut)">Chức năng AI trực tiếp chưa được kết nối. Khi có máy chủ AI, bot sẽ trả lời các câu hỏi Xác suất Thống kê tại đây.</p></div>
+
+<script>
+window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg:{fontCache:'global'},options:{skipHtmlTags:['script','style','textarea']}};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.js" async></script>
+<script>
+const $=id=>document.getElementById(id);
+const S={user:null,prob:'',level:1,mode:'full',log:[],topic:''};
+let mode='in';
+function typeset(el){try{if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([el]).catch(e=>console.warn(e));else setTimeout(()=>typeset(el),300)}catch(e){console.warn(e)}}
+function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',3000)}
+function na(n){toast(n+': chức năng chưa khả dụng, chưa được triển khai.')}
+function go(v,x){
+ document.querySelectorAll('.view').forEach(e=>e.classList.remove('on'));
+ $('v-'+v).classList.add('on');
+ $('nav').classList.toggle('on',v!='welcome'&&v!='login');
+ if(v=='login')lmode(x||'in');
+ if(v=='solve')step(1);
+ if(v=='review')renderReview();
+ window.scrollTo(0,0);
+ if(x=='feat')setTimeout(()=>$('feat').scrollIntoView({behavior:'smooth'}),50);
+ typeset($('v-'+v));
+}
+function lmode(m){mode=m;$('rg').style.display=m=='reg'?'block':'none';$('ltitle').textContent=m=='reg'?'Đăng ký':'Đăng nhập';$('lgo').textContent=m=='reg'?'Tạo tài khoản':'Đăng nhập';$('lsw').textContent=m=='reg'?'Đã có tài khoản? Đăng nhập':'Chưa có tài khoản? Đăng ký';$('lerr').textContent=''}
+const accounts={};
+function auth(){
+ const u=$('u').value.trim(),p=$('p').value,e=$('lerr');e.className='err';
+ if(!u||!p){e.textContent='Vui lòng nhập đầy đủ các trường bắt buộc.';return}
+ if(!/^[A-Za-z0-9_À-ỹ]{3,20}$/.test(u)){e.textContent='Tên người dùng gồm 3–20 ký tự chữ, số hoặc dấu gạch dưới.';return}
+ if(p.length<6){e.textContent='Mật khẩu cần tối thiểu 6 ký tự.';return}
+ if(mode=='reg'){
+  if($('p2').value!==p){e.textContent='Mật khẩu xác nhận không khớp.';return}
+  if(u in accounts){e.textContent='Không thể tạo tài khoản với tên này. Hãy thử tên khác.';return}
+  accounts[u]=true;
+ }else if(!(u in accounts)){e.textContent='Tên người dùng hoặc mật khẩu chưa đúng.';return}
+ e.className='err ok';e.textContent='Thành công! Đang chuyển đến trang chủ…';
+ S.user=u;$('acc').textContent='👤 '+u;$('p').value=$('p2').value='';
+ setTimeout(()=>go('home'),500);
+}
+function guest(){S.user='Khách';$('acc').textContent='👤 Khách';go('home')}
+
+/* Sample problem – LaTeX kept in String.raw */
+const SAMPLE=String.raw`Cho \(X\sim N(\mu,\sigma^2)\) với \(\mu=50\) và \(\sigma^2=16\). Tính \(P(48<X<54)\).`;
+const PAL=[String.raw`\(P(A)\)`,String.raw`\(P(A\mid B)\)`,String.raw`\(E(X)\)`,String.raw`\(\operatorname{Var}(X)\)`,String.raw`\(\mu\)`,String.raw`\(\sigma\)`,String.raw`\(\sigma^2\)`,String.raw`\(\bar{x}\)`,String.raw`\(X\sim N(\mu,\sigma^2)\)`,String.raw`\(Z=\frac{X-\mu}{\sigma}\)`,String.raw`\(\Phi(z)\)`,String.raw`\(\sum_{i=1}^{n}x_i\)`,String.raw`\(\int_a^b f(x)\,dx\)`,String.raw`\(\sqrt{x}\)`,String.raw`\(\le\)`,String.raw`\(\ge\)`,String.raw`\(\cap\)`,String.raw`\(\cup\)`,String.raw`\(\alpha\)`,String.raw`\(\lambda\)`];
+PAL.forEach(f=>{const b=document.createElement('button');b.type='button';b.textContent=f.replace(/\\\(|\\\)/g,'').replace(/\\operatorname\{Var\}/,'Var').replace(/\\mid/,'|').replace(/\\sim/,'~').replace(/\\(mu|sigma|alpha|lambda|Phi|le|ge|cap|cup|sum|int|sqrt|bar)/g,(m,k)=>({mu:'μ',sigma:'σ',alpha:'α',lambda:'λ',Phi:'Φ',le:'≤',ge:'≥',cap:'∩',cup:'∪',sum:'Σ',int:'∫',sqrt:'√',bar:'x̄'})[k]).replace(/[{}\\_^]/g,'');b.title=f;b.onclick=()=>{const t=$('prob'),s=t.selectionStart;t.value=t.value.slice(0,s)+f+t.value.slice(t.selectionEnd);t.focus();t.selectionStart=t.selectionEnd=s+f.length};$('pal').appendChild(b)});
+function sample(){$('prob').value=SAMPLE}
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#tabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');['t','c','f'].forEach(k=>$('p'+k).style.display=k==b.dataset.t?'block':'none')});
+$('img').onchange=e=>{const f=e.target.files[0];if(!f)return;const u=URL.createObjectURL(f);$('prv').innerHTML='';const im=new Image();im.src=u;im.style.maxWidth='100%';im.style.borderRadius='12px';$('prv').append(im);const d=document.createElement('p');d.textContent='Đã tải ảnh. Nhận diện chữ (OCR) chưa được tích hợp, hãy gõ lại đề ở tab Nhập đề.';$('prv').append(d)};
+$('fl').onchange=e=>{const f=e.target.files[0];if(!f)return;const ok=/pdf|image/.test(f.type)&&f.size<=10*1048576;$('fi').textContent=ok?`${f.name} (${(f.size/1024).toFixed(0)} KB): đã tải lên nhưng chưa đọc được nội dung vì OCR chưa kết nối. Hãy gõ đề ở tab Nhập đề.`:'Tệp không hợp lệ: chỉ nhận PDF hoặc ảnh dưới 10 MB.'};
+function voice(){
+ const R=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!R){toast('Trình duyệt này chưa hỗ trợ ghi âm thành văn bản.');return}
+ const r=new R();r.lang='vi-VN';r.interimResults=false;$('mic').textContent='🎙 Đang nghe…';
+ r.onresult=e=>{$('prob').value+=(($('prob').value?' ':'')+e.results[0][0].transcript);toast('Hãy kiểm tra lại văn bản đã nhận diện.')};
+ r.onend=()=>$('mic').textContent='🎤 Ghi âm đề';r.onerror=()=>toast('Không ghi âm được. Hãy thử lại hoặc gõ đề.');r.start();
+}
+function confirmP(){
+ const v=$('prob').value.trim();if(!v){$('e1').textContent='Bạn chưa nhập đề bài.';return}
+ $('e1').textContent='';S.prob=v;const d=$('cfv');d.textContent=v;$('cf').style.display='block';typeset(d);
+}
+function step(n){
+ for(let i=1;i<=5;i++)$('s'+i).style.display=i==n?'block':'none';
+ document.querySelectorAll('#stp i').forEach((x,i)=>x.classList.toggle('on',i<n));
+ if(n==4)render();
+ if(n==5)logSolve();
+}
+document.querySelectorAll('#lv .opt').forEach((b,i)=>b.onclick=()=>{document.querySelectorAll('#lv .opt').forEach(x=>x.classList.remove('on'));b.classList.add('on');S.level=i+1});
+document.querySelectorAll('#md .opt').forEach(b=>b.onclick=()=>{S.mode=b.dataset.m;step(4)});
+
+/* Solution content: verified worked example (not AI generated) */
+const isSample=()=>S.prob===SAMPLE;
+const MODES={hint:'Gợi ý',guide:'Hướng dẫn',check:'Kiểm tra',full:'Giải đầy đủ'};
+const SOL={
+hint:String.raw`<h3>Kiến thức liên quan</h3><p>Biến ngẫu nhiên chuẩn hóa: \(Z=\frac{X-\mu}{\sigma}\sim N(0,1)\). Chú ý \(\sigma\) là độ lệch chuẩn, còn đề cho \(\sigma^2\).</p><p>Gợi ý: đổi hai cận \(48\) và \(54\) sang \(z\), rồi biểu diễn kết quả qua \(\Phi(z)=P(Z\le z)\).</p>`,
+guide:String.raw`<h3>1. Phân tích đề bài</h3><p>Dữ kiện: \(\mu=50\), \(\sigma^2=16\). Cần tìm: \(P(48<X<54)\).</p><h3>2. Kiến thức áp dụng</h3><p>\(Z=\frac{X-\mu}{\sigma}\sim N(0,1)\) và \(P(a<X<b)=\Phi\!\left(\frac{b-\mu}{\sigma}\right)-\Phi\!\left(\frac{a-\mu}{\sigma}\right)\).</p><h3>3. Hướng làm</h3><p>Bước a: tính \(\sigma=\sqrt{16}\). Bước b: tính \(z\) cho từng cận. Bước c: tra bảng \(\Phi(z)\) (với \(z<0\) dùng \(\Phi(-z)=1-\Phi(z)\)) rồi lấy hiệu.</p>`,
+full:String.raw`<h3>1. Phân tích đề bài</h3><p>Cho \(X\sim N(\mu,\sigma^2)\), \(\mu=50\), \(\sigma^2=16\Rightarrow\sigma=4\). Cần tính \(P(48<X<54)\).</p><h3>2. Kiến thức áp dụng</h3><p>\[P(a<X<b)=\Phi\!\left(\frac{b-\mu}{\sigma}\right)-\Phi\!\left(\frac{a-\mu}{\sigma}\right)\]</p><h3>3. Các bước giải</h3><p>\[z_1=\frac{48-50}{4}=-0{,}5,\qquad z_2=\frac{54-50}{4}=1\]</p><p>Tra bảng: \(\Phi(1)=0{,}8413\), \(\Phi(0{,}5)=0{,}6915\), nên \(\Phi(-0{,}5)=1-0{,}6915=0{,}3085\).</p><p>\[P(48<X<54)=\Phi(1)-\Phi(-0{,}5)=0{,}8413-0{,}3085=0{,}5328\]</p><h3>4. Kết quả</h3><div class="ans">\(P(48<X<54)\approx 0{,}5328\) (làm tròn 4 chữ số theo bảng tra).</div><h3>5. Kiểm tra và lưu ý</h3><p>Kết quả nằm trong \([0,1]\) và hợp lý vì khoảng \((48;54)\) chứa \(\mu=50\) và rộng \(1{,}5\sigma\). Lỗi thường gặp: dùng \(16\) thay vì \(\sigma=4\) khi chuẩn hóa.</p>`};
+function render(){
+ const m=S.mode,o=$('out'),mt=$('mt');
+ mt.innerHTML='';Object.keys(MODES).forEach(k=>{const b=document.createElement('button');b.className='btn'+(k==m?' on':'');b.textContent=MODES[k];b.onclick=()=>{S.mode=k;render()};mt.append(b)});
+ const d=$('demo');
+ if(!isSample()){d.textContent='Chức năng AI trực tiếp chưa được kết nối nên chưa thể giải đề do bạn nhập. Đề của bạn vẫn được giữ nguyên bên dưới; hãy dùng đề mẫu để xem lời giải mẫu.';o.textContent='';const p=document.createElement('p');p.textContent=S.prob;o.append(p);typeset(o);return}
+ d.textContent='Đây là lời giải mẫu được tích hợp sẵn. Chức năng AI trực tiếp chưa được kết nối.';
+ o.innerHTML=`<p>${SAMPLE}</p>`+(m=='check'?`<p>Nhập đáp án của bạn cho \\(P(48<X<54)\\):</p><div class="row"><input id="my" style="max-width:160px" placeholder="vd 0,5328"><button class="btn pri" onclick="chk()">Kiểm tra</button></div><div id="cr"></div>`:SOL[m]);
+ typeset(o);
+}
+function chk(){
+ const v=parseFloat($('my').value.replace(',','.')),r=$('cr');
+ if(isNaN(v)){r.textContent='Hãy nhập một số, ví dụ 0,5328.';return}
+ r.innerHTML=Math.abs(v-0.5328)<0.0006?String.raw`Đúng. \(P(48<X<54)\approx0{,}5328\). Bạn hãy xem lại cách chuẩn hóa để chắc từng bước.`:String.raw`Chưa khớp. Hãy kiểm tra: \(\sigma=\sqrt{16}=4\), \(z_1=-0{,}5\), \(z_2=1\), sau đó lấy \(\Phi(1)-\Phi(-0{,}5)\).`;
+ typeset(r);
+}
+function logSolve(){S.topic=isSample()?'Phân phối chuẩn – tính xác suất':'Bài do bạn nhập';S.log.push({t:S.topic,mode:MODES[S.mode],ai:isSample()})}
+function practice(){go('game');$('gift').style.display='block';$('gt').textContent='Chủ đề vừa giải: '+S.topic}
+
+/* Game map */
+(function(){const st=['done','ready','lock','lock','lock','lock','lock'],nm=['Biến cố','Xác suất','Có điều kiện','Bayes','Rời rạc','Chuẩn','Mẫu'];
+ st.forEach((s,i)=>{const n=document.createElement('div');n.className='node '+s;n.innerHTML=`Level ${i+1}<br>${nm[i]}<br>${{done:'Đã hoàn thành',ready:'Sẵn sàng',lock:'Chưa mở khóa'}[s]}`;n.onclick=()=>toast('Giao diện mẫu: level chưa có nội dung.');$('map').append(n)});
+})();
+function renderReview(){
+ const n=S.log.length;
+ $('rnote').textContent=n?'Nhật ký phiên hiện tại là dữ liệu thật. Hai thẻ còn lại là dữ liệu mẫu minh họa. Dữ liệu các phiên trước chưa được lưu. '+(n<5?'Số bài còn ít nên mọi nhận xét chỉ mang tính tham khảo.':''):'Chưa có bài nào trong phiên này; các thẻ bên dưới đang hiển thị dữ liệu mẫu.';
+ $('rlog').innerHTML=n?'':'<p style="color:var(--mut)">Chưa có bài nào. Hãy giải một bài để xem tại đây.</p>';
+ S.log.forEach(l=>{const p=document.createElement('p');p.textContent=`${l.t} – chế độ ${l.mode}`;$('rlog').append(p)});
+}
+
+/* Laplace table: Φ(z) via erf (A&S 7.1.26-grade, refined with series for accuracy) */
+function Phi(z){let s=0,t=z,k=0;if(Math.abs(z)>6)return z>0?1:0;let sum=z;for(k=1;k<200;k++){t*=z*z/(2*k+1);sum+=t}return 0.5+Math.exp(-z*z/2)*sum/Math.sqrt(2*Math.PI)}
+(function(){let h='<tr><th>z</th>';for(let c=0;c<10;c++)h+=`<th>0,0${c}</th>`;h+='</tr>';
+ for(let r=0;r<=34;r++){const b=r/10;h+=`<tr><th>${b.toFixed(1).replace('.',',')}</th>`;for(let c=0;c<10;c++)h+=`<td>${Phi(b+c/100).toFixed(4).replace('.',',')}</td>`;h+='</tr>'}
+ $('lt').innerHTML=h})();
+
+/* Starfield + shooting stars */
+(function(){
+ const cv=$('cv'),x=cv.getContext('2d'),red=matchMedia('(prefers-reduced-motion:reduce)').matches;
+ let W,H,st=[],sh=[],mx=0,my=0;
+ function size(){W=cv.width=innerWidth;H=cv.height=innerHeight;st=Array.from({length:Math.min(500,W*H/2500|0)},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.4+.2,d:Math.random()*.9+.1,p:Math.random()*6,c:['#fff','#9fe8ff','#c4b5fd','#ffd66b'][Math.random()*4|0]}))}
+ addEventListener('resize',size);size();
+ addEventListener('mousemove',e=>{mx=e.clientX/W-.5;my=e.clientY/H-.5});
+ function f(t){x.clearRect(0,0,W,H);
+  st.forEach(s=>{x.globalAlpha=.5+.5*Math.sin(t/700*s.d+s.p);x.fillStyle=s.c;x.beginPath();x.arc(s.x-mx*s.d*30,s.y-my*s.d*30,s.r,0,6.3);x.fill()});
+  if(!red&&Math.random()<.012)sh.push({x:Math.random()*W,y:Math.random()*H*.5,vx:6+Math.random()*6,vy:3+Math.random()*3,l:40});
+  sh=sh.filter(s=>s.l>0);sh.forEach(s=>{x.globalAlpha=s.l/40;x.strokeStyle='#bfe9ff';x.lineWidth=1.5;x.beginPath();x.moveTo(s.x,s.y);x.lineTo(s.x-s.vx*5,s.y-s.vy*5);x.stroke();s.x+=s.vx;s.y+=s.vy;s.l--});
+  x.globalAlpha=1;if(!red)requestAnimationFrame(f)}
+ requestAnimationFrame(f);
+})();
+</script>
+<script>
+/* AI qua máy chủ riêng (/api/ask), không phụ thuộc claude.ai */
+async function imgB64(f){const b=await createImageBitmap(f),k=Math.min(1,1600/Math.max(b.width,b.height)),c=document.createElement('canvas');c.width=Math.round(b.width*k);c.height=Math.round(b.height*k);c.getContext('2d').drawImage(b,0,0,c.width,c.height);return c.toDataURL('image/jpeg',.85).split(',')[1]}
+const SM=async(input,o={})=>{
+ const turns=typeof input=='string'?[{role:'user',content:input}]:input,images=[];
+ for(const f of(o.images||[]))images.push(await imgB64(f));
+ let r;try{r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:turns,images,tier:o.modelTier||'default'})})}catch(e){throw{code:'network'}}
+ if(!r.ok)throw{code:r.status==429?'rate_limited':'server'};
+ const rd=r.body.getReader(),dec=new TextDecoder();let buf='',text='';
+ for(;;){const{done,value}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});const parts=buf.split('\n\n');buf=parts.pop();
+  for(const p of parts){const l=p.split('\n').find(x=>x.startsWith('data: '));if(!l)continue;let j;try{j=JSON.parse(l.slice(6))}catch(e){continue}
+   if(j.type=='content_block_delta'&&j.delta&&j.delta.text){text+=j.delta.text;if(o.onText)o.onText({text,delta:j.delta.text})}
+   if(j.type=='error')throw{code:'server',text}}}
+ if(!text)throw{code:'server'};return{text,truncated:false}};
+S.res={};S.prog={};S.pts=0;S.viva=[];S.perfect=false;
+try{const j=JSON.parse(localStorage.getItem('sv_state')||'null');if(j)Object.assign(S,j)}catch(e){}
+function save(){try{localStorage.setItem('sv_state',JSON.stringify({log:S.log,prog:S.prog,pts:S.pts,viva:S.viva,perfect:S.perfect}))}catch(e){}}
+if(!Array.isArray(S.log)||(S.log[0]&&!S.log[0].d))S.log=[];
+const today=()=>new Date().toISOString().slice(0,10);
+function addLog(o){S.log.push(Object.assign({d:today()},o));save()}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
+const ERR={network:'Không kết nối được máy chủ AI. Hãy kiểm tra mạng rồi thử lại.',server:'Máy chủ AI đang lỗi hoặc quá tải, hãy thử lại sau.',rate_limited:'Đang gửi quá nhiều yêu cầu, hãy đợi một chút rồi thử lại.',unavailable:'Chức năng AI chưa sẵn sàng.'};
+const eMsg=e=>ERR[e&&e.code]||'Không gọi được AI, hãy thử lại sau.';
+async function ask(input,o={}){if(!SM)throw{code:'unavailable'};return SM(input,Object.assign({cache:false},o))}
+function fmt(t){return esc(t).replace(/^### ?(.*)$/gm,'<h3>$1</h3>').replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>').replace(/<\/h3><br>/g,'</h3>')}
+function meta(t){const g=k=>(t.match(new RegExp('^\\s*'+k+':\\s*(.*)$','m'))||[])[1];return{topic:(g('CHUDE')||'').trim(),kq:(g('KETQUA')||'').trim().toLowerCase(),err:(g('LOI')||'').split(/[,;]/).map(s=>s.trim()).filter(s=>s&&!/^(không|khong|none)/i.test(s)),clean:t.replace(/^\s*(CHUDE|KETQUA|LOI):.*$/gm,'').trim()}}
+const RULES=String.raw`Bạn là trợ lý môn Xác suất Thống kê đại học của website STATVERSE. Trả lời tiếng Việt, thân thiện, chính xác, ngắn gọn, đánh số bước; thuật ngữ tiếng Anh phải giải thích. Công thức viết bằng LaTeX: nội dòng đặt trong \( ... \), công thức riêng dòng đặt trong \[ ... \]. Không dùng dấu $. Dùng ký hiệu chuẩn như \mu, \sigma, \Phi(z), P(A\mid B), \operatorname{Var}(X); không thay LaTeX bằng ký tự Unicode và không dùng \Phi_0. Chỉ dùng ### làm tiêu đề và **đậm** cho kết quả. Phân biệt phương sai tổng thể/mẫu, phân phối chuẩn/chuẩn tắc, xác suất/mật độ. Không làm tròn trung gian sớm; tự kiểm tra kết quả một lần. Nếu đề thiếu dữ kiện hoặc mơ hồ thì hỏi lại hoặc nêu rõ giả định; nếu không chắc thì nói rõ. Không nịnh, chỉ rõ sai ở đâu và vì sao. Chỉ hỗ trợ Xác suất Thống kê, chủ đề khác thì từ chối lịch sự.`;
+const MP={hint:'CHẾ ĐỘ GỢI Ý: chỉ nêu kiến thức, công thức liên quan và gợi ý từng phần; KHÔNG đưa lời giải đầy đủ hay đáp số.',guide:'CHẾ ĐỘ HƯỚNG DẪN: phân tích đề (dữ kiện, cần tìm), hướng dẫn từng bước và giải thích vì sao dùng công thức; chưa đưa đáp số cuối.',check:'CHẾ ĐỘ KIỂM TRA: kiểm tra lời giải của học sinh từng bước; chỉ rõ bước đúng/sai, lý do, cách sửa, gắn nhãn lỗi trong [Khái niệm, Công thức, Tính toán, Đọc đề, Thiếu bước, Trình bày]. Thêm hai dòng cuối: KETQUA: dung hoặc can_goi_y hoặc sai  và  LOI: các nhãn lỗi cách nhau dấu phẩy (hoặc: không).',full:'CHẾ ĐỘ GIẢI ĐẦY ĐỦ theo quy trình 4 bước (tìm hiểu đề, xây dựng chương trình giải, trình bày lời giải, kiểm tra và nghiên cứu lời giải), trình bày 5 phần: ### 1. Phân tích đề bài ### 2. Kiến thức áp dụng ### 3. Các bước giải (công thức tổng quát trước khi thay số) ### 4. Kết quả (phân biệt chính xác và làm tròn) ### 5. Kiểm tra và lưu ý.'};
+const LV=['Người học chưa hiểu đề: giải thích dữ kiện và yêu cầu.','Người học hiểu đề nhưng chưa biết cách làm: gợi ý phương pháp.','Người học đã làm thử: ưu tiên phát hiện lỗi.','Người học muốn xem lời giải đầy đủ.'];
+const OCRP=String.raw`Hãy chép lại CHÍNH XÁC đề bài Xác suất Thống kê trong ảnh. Công thức viết bằng LaTeX trong \( ... \). Giữ nguyên dấu âm/dương, số mũ, chỉ số dưới, phân số, căn, ký hiệu Hy Lạp, điều kiện xác suất. Chỗ mờ hoặc không chắc chắn thì đánh dấu [?], tuyệt đối không tự đoán dữ kiện. Nếu có bài làm viết tay, chép đề trước rồi ghi dòng BÀI LÀM: và chép bài làm. Nếu ảnh không phải bài Xác suất Thống kê, chỉ trả lời: KHONG_PHAI_DE. Chỉ trả về nội dung chép lại.`;
+/* navigation wrappers */
+const _go=go;go=function(v,x){_go(v,x);if(v=='game')drawMap();if(v=='viva'&&S.topic&&!$('vt').value)$('vt').value=S.topic};
+const _step=step;step=function(n){if(n==2){const v=$('prob').value.trim();if(/\[\?\]/.test(v)){$('e1').textContent='Đề còn chỗ đánh dấu [?]. Hãy sửa trong khung nhập trước khi giải.';$('cf').style.display='none';return}if(v!==S.prob){S.prob=v;S.res={}}}_step(n)};
+function logSolve(){}
+/* OCR via Claude vision */
+async function ocrFile(f,box){
+ box.innerHTML='';const im=new Image();im.src=URL.createObjectURL(f);im.style.cssText='max-width:100%;max-height:260px;border-radius:12px';box.append(im);
+ const st=document.createElement('p');box.append(st);
+ if(!SM){st.textContent=ERR.unavailable;return}
+ st.textContent='Đang đọc đề từ ảnh… (hãy chỉ chụp bài tập, tránh thông tin cá nhân)';
+ try{const r=await ask(OCRP,{images:[f],modelTier:'default'});const t=r.text.trim();
+  if(/KHONG_PHAI_DE/.test(t)){st.textContent='Ảnh này không giống bài Xác suất Thống kê. Hãy chụp lại đề bài (đủ sáng, chụp thẳng, lấy trọn trang).';return}
+  $('prob').value=t;st.textContent='Đã đọc xong. Hãy kiểm tra nội dung ở phần xác nhận, sửa chỗ sai hoặc chỗ có [?].';
+  document.querySelector('#tabs button').click();confirmP()}
+ catch(e){st.textContent=e&&e.code=='images_unavailable'?'Môi trường này chưa cho gửi ảnh tới AI.':eMsg(e)}
+}
+$('img').onchange=e=>{const f=e.target.files[0];if(f)ocrFile(f,$('prv'))};
+$('fl').onchange=e=>{const f=e.target.files[0];if(!f)return;const b=$('fi');if(f.size>10485760||!/image|pdf/.test(f.type)){b.textContent='Tệp không hợp lệ: chỉ nhận ảnh hoặc PDF dưới 10 MB.';return}if(/pdf/.test(f.type)){b.textContent=f.name+': trình đọc hiện chỉ nhận ảnh. Hãy chụp màn hình trang đề rồi tải ảnh lên.';return}ocrFile(f,b)};
+/* Solve with AI */
+function render(){
+ const m=S.mode,mt=$('mt');mt.innerHTML='';
+ Object.keys(MODES).forEach(k=>{const b=document.createElement('button');b.className='btn'+(k==m?' on':'');b.textContent=MODES[k];b.onclick=()=>{S.mode=k;render()};mt.append(b)});
+ $('demo').textContent=SM?'Lời giải do AI tạo. Hãy tự kiểm tra lại các kết quả quan trọng.':ERR.unavailable;
+ const o=$('out');o.innerHTML='<div id="pq" style="border-bottom:1px solid #fff3;padding-bottom:.6rem;margin-bottom:.6rem"></div><div id="res"></div>';
+ $('pq').textContent=S.prob;typeset($('pq'));
+ if(m=='check'){const d=document.createElement('div');d.innerHTML='<label for="mine">Lời giải hoặc đáp án của bạn</label><textarea id="mine"></textarea><div class="row"><button class="btn pri" id="cb">Kiểm tra bài làm</button></div>';o.insertBefore(d,$('res'));$('cb').onclick=()=>{const v=$('mine').value.trim();if(!v){$('res').textContent='Hãy nhập lời giải trước.';return}runSolve('check',v)}}
+ else runSolve(m);
+}
+async function runSolve(m,mine){
+ const o=$('res'),key=m+'|'+(mine||'');
+ if(S.res[key]){showRes(S.res[key],m,true);return}
+ o.textContent='Đang suy nghĩ… (có thể mất vài chục giây)';
+ const inp=RULES+'\n\n'+MP[m]+'\nCuối câu trả lời thêm dòng: CHUDE: <chương hoặc dạng bài, tối đa 6 từ>.\nTình trạng người học: '+LV[S.level-1]+'\n\nĐỀ BÀI:\n'+S.prob+(mine?'\n\nLỜI GIẢI CỦA HỌC SINH:\n'+mine:'');
+ try{const r=await ask(inp,{modelTier:m=='hint'?'default':'complex'});S.res[key]=r.text;showRes(r.text,m,false)}catch(e){o.textContent=eMsg(e)}
+}
+function showRes(t,m,again){
+ const x=meta(t),o=$('res');o.innerHTML=fmt(x.clean);typeset(o);if(x.topic)S.topic=x.topic;if(again)return;
+ const ok=['dung','can_goi_y','sai'].includes(x.kq);if(m=='check'&&!ok)return;
+ addLog({topic:S.topic||'Chưa rõ',result:m=='check'?x.kq:'can_goi_y',support:m=='check'?'tu_lam':m=='full'?'xem_loi_giai':'goi_y',err:x.err,src:'solve',prob:S.prob});
+}
+function practice(){go('game');$('gift').style.display='block';const t=S.topic||'dạng bài vừa giải';$('gt').textContent='Chủ đề vừa giải: '+t+' ';const b=document.createElement('button');b.className='btn pri';b.textContent='Làm 3 câu về chủ đề này';b.onclick=()=>genQs(t,3,null);$('gt').append(b)}
+/* Chatbot */
+$('chat').innerHTML='<b>Chatbot AI</b><div id="cl" style="max-height:240px;overflow:auto;font-size:.88rem;margin:.5rem 0"></div><textarea id="ci" style="min-height:50px" placeholder="Hỏi về Xác suất Thống kê…"></textarea><button class="btn pri" style="margin-top:.4rem" onclick="chatSend()">Gửi</button>';
+let CH=[];
+async function chatSend(){
+ const t=$('ci').value.trim();if(!t)return;$('ci').value='';
+ const l=$('cl'),u=document.createElement('div'),a=document.createElement('div');u.style.textAlign='right';u.textContent=t;a.style.margin='.4rem 0';a.textContent='Đang suy nghĩ…';l.append(u,a);
+ CH.push({role:'user',content:t});
+ const inp=CH.slice(-7).map((m,i,r)=>i==r.length-1?{role:'user',content:RULES+'\n\nNgười học hỏi: '+m.content}:m);
+ try{const r=await ask(inp,{modelTier:'default'});CH.push({role:'assistant',content:r.text});a.innerHTML=fmt(r.text);typeset(a)}catch(e){CH.pop();a.textContent=eMsg(e)}
+ l.scrollTop=l.scrollHeight;
+}
+/* Viva */
+function listen(btn,cb,lab){const R=window.SpeechRecognition||window.webkitSpeechRecognition;if(!R){toast('Trình duyệt này chưa hỗ trợ ghi âm thành văn bản.');return}const r=new R();r.lang='vi-VN';btn.textContent='🎙 Đang nghe…';r.onresult=e=>cb(e.results[0][0].transcript);r.onend=()=>btn.textContent=lab;r.onerror=()=>toast('Không ghi âm được, hãy thử lại hoặc gõ chữ.');r.start()}
+function vVoice(){listen($('vm'),t=>{$('va').value+=($('va').value?' ':'')+t;toast('Kiểm tra lại văn bản nhận diện rồi bấm Gửi.')},'🎤 Nói')}
+const VR=String.raw`Bạn là giám khảo vấn đáp môn Xác suất Thống kê đại học, nói tiếng Việt, thân thiện nhưng công bằng. Quy tắc: mỗi lượt chỉ đặt MỘT câu hỏi rồi chờ; câu hỏi đi từ định nghĩa, tính chất, điều kiện áp dụng, so sánh khái niệm gần nhau, đến vận dụng. Sau mỗi câu trả lời, phản hồi 1-3 câu (đúng/thiếu/sai chỗ nào), chưa tiết lộ đáp án đầy đủ nếu người học còn tự sửa được, có thể gợi mở một lần, rồi hỏi câu tiếp. Nếu đúng một phần, ghi nhận phần đúng và hỏi sâu phần thiếu. Người học có thể nói "gợi ý", "bỏ qua", "dừng". Nội dung có thể đến từ nhận dạng giọng nói: nếu từ hoặc số bất thường, hỏi xác nhận trước khi chấm. Công thức viết LaTeX trong \( ... \). Chấm thang 10 cho mỗi câu: đúng kiến thức 50%, đầy đủ 30%, diễn đạt 20%; gợi ý cấp 1 trừ 0,5, cấp 2 trừ 1, xem đáp án tối đa 50% điểm câu; không nâng điểm để làm hài lòng. Khi đủ số câu hoặc người học nói "dừng", viết báo cáo: 1) bảng điểm từng câu và tổng (nêu cách tính), 2) trả lời tốt ở đâu, 3) lỗ hổng kiến thức kèm câu trả lời gốc làm dẫn chứng, 4) sai lầm gắn nhãn (Khái niệm/Công thức/Thiếu bước...), 5) giải thích đúng ngắn gọn, 6) 2-3 việc nên làm tiếp; nếu dưới 3 câu thì nói đánh giá chỉ mang tính tham khảo. Dòng cuối báo cáo đúng dạng: DIEM: x.x/10. Không chấm thêm sau báo cáo.`;
+let VH=[];
+function vBub(t,me){const d=document.createElement('div');d.className='sol';d.style.cssText='margin:.5rem 0;border-left:3px solid '+(me?'var(--vi)':'var(--cy)');if(me)d.style.textAlign='right';d.textContent=t;$('vlog').append(d);return d}
+async function vTurn(){
+ const d=vBub('Đang suy nghĩ…');
+ try{const r=await ask(VH,{modelTier:'default'});VH.push({role:'assistant',content:r.text});const m=r.text.match(/DIEM:\s*([\d.,]+)/);
+  if(m){S.viva.push({d:today(),topic:$('vt').value||'Tổng hợp',diem:parseFloat(m[1].replace(',','.'))});save()}
+  d.innerHTML=fmt(r.text.replace(/DIEM:.*$/m,''));typeset(d)}
+ catch(e){VH.pop();d.textContent=eMsg(e)}
+}
+function vStart(){const t=$('vt').value.trim();VH=[{role:'user',content:VR+'\n\nBắt đầu vấn đáp. Chủ đề: '+(t||'hãy đề xuất một chủ đề cơ bản')+'. Số câu: '+$('vn').value+'. Mức: '+$('vl').value+'. Hãy chào ngắn gọn và đặt câu hỏi 1.'}];$('vlog').innerHTML='';$('vlog').style.display='block';$('vin').style.display='block';vTurn()}
+function vSend(x){const t=x||$('va').value.trim();if(!t)return;vBub(t,1);VH.push({role:'user',content:t});$('va').value='';vTurn()}
+/* Game */
+const BANK=[
+{q:String.raw`Cho \(P(A)=0{,}5\), \(P(B)=0{,}4\), \(P(A\cap B)=0{,}2\). Tính \(P(A\cup B)\).`,o:['0,9','0,7','0,5','0,1'],a:1,e:String.raw`\(P(A\cup B)=P(A)+P(B)-P(A\cap B)=0{,}5+0{,}4-0{,}2=0{,}7\).`},
+{q:String.raw`Cho \(P(A\cap B)=0{,}12\) và \(P(B)=0{,}4\). Tính \(P(A\mid B)\).`,o:['0,3','0,48','0,052','0,12'],a:0,e:String.raw`\(P(A\mid B)=\frac{P(A\cap B)}{P(B)}=\frac{0{,}12}{0{,}4}=0{,}3\).`},
+{q:String.raw`Tung một con xúc xắc cân đối, \(X\) là số chấm xuất hiện. Tính \(E(X)\).`,o:['3','3,5','4','2,5'],a:1,e:String.raw`\(E(X)=\frac{1+2+3+4+5+6}{6}=3{,}5\).`},
+{q:String.raw`Biết \(E(X)=3\) và \(E(X^2)=13\). Tính \(\operatorname{Var}(X)\).`,o:['4','10','16','1'],a:0,e:String.raw`\(\operatorname{Var}(X)=E(X^2)-[E(X)]^2=13-9=4\).`},
+{q:String.raw`Với \(Z\sim N(0,1)\), giá trị \(\Phi(0)=P(Z\le 0)\) bằng bao nhiêu?`,o:['0','0,5','1','0,25'],a:1,e:String.raw`Phân phối chuẩn tắc đối xứng quanh \(0\) nên \(\Phi(0)=0{,}5\).`},
+{q:String.raw`Cho \(X\sim N(10,9)\). Biết \(\Phi(1)=0{,}8413\). Tính \(P(X\le 13)\).`,o:['0,8413','0,9987','0,6915','0,5'],a:0,e:String.raw`\(\sigma=\sqrt{9}=3\), \(z=\frac{13-10}{3}=1\), nên \(P(X\le 13)=\Phi(1)=0{,}8413\).`}];
+const LVS=[{n:'Xác suất',b:[0,1]},{n:'Kỳ vọng – Phương sai',b:[2,3]},{n:'Phân phối chuẩn',b:[4,5]},{n:'Công thức Bayes'},{n:'Biến ngẫu nhiên rời rạc'},{n:'Khoảng tin cậy'},{n:'Kiểm định giả thuyết'}];
+function drawMap(){
+ const m=$('map');m.innerHTML='';
+ LVS.forEach((l,i)=>{const s=S.prog[i]?'done':(i==0||S.prog[i-1])?'ready':'lock',n=document.createElement('div');n.className='node '+s;n.innerHTML='Level '+(i+1)+'<br>'+l.n+'<br>'+{done:'Đã hoàn thành',ready:'Sẵn sàng',lock:'Chưa mở khóa'}[s];n.onclick=()=>s=='lock'?toast('Hãy hoàn thành level trước đó.'):startLevel(i);m.append(n)});
+ $('pts').textContent=S.pts;const c=Object.keys(S.prog).length;
+ $('ach').innerHTML=[[S.pts>0,'🏅','Bước đầu tiên'],[S.pts>=50,'⭐','Đạt 50 điểm'],[S.perfect,'💯','Đúng hết một level'],[c>=3,'🚀','Qua 3 level']].map(a=>a[0]?a[1]+' '+a[2]:'🔒 '+a[2]).join(' &nbsp; ');
+}
+function startLevel(i){const l=LVS[i];l.b?runQuiz(l.b.map(k=>Object.assign({},BANK[k])),{title:'Level '+(i+1)+' – '+l.n,topic:l.n,lv:i}):genQs(l.n,3,i)}
+function playNext(){const i=LVS.findIndex((x,k)=>!S.prog[k]);startLevel(Math.max(0,i))}
+function parseQs(t){return t.split('---').map(b=>{const g=k=>(b.match(new RegExp('^\\s*'+k+':\\s*(.*)$','m'))||[])[1];return{q:g('CAU'),o:['A','B','C','D'].map(g),a:'ABCD'.indexOf((g('DAP')||'').trim()[0]),e:g('GIAI')||''}}).filter(x=>x.q&&x.o.every(Boolean)&&x.a>=0)}
+async function genQs(t,n,lv){
+ if(!SM){toast(ERR.unavailable);return}
+ const b=$('quiz');b.style.display='block';b.textContent='Đang tạo câu hỏi bằng AI…';
+ try{const r=await ask('Tạo '+n+' câu trắc nghiệm 4 đáp án về "'+t+'" môn Xác suất Thống kê đại học, mức cơ bản đến vận dụng. Hãy tự tính kiểm tra để đáp án đúng chắc chắn. Công thức LaTeX trong \\( ... \\), số thập phân dùng dấu phẩy. Đúng định dạng sau, các câu cách nhau một dòng ---, không thêm chữ nào khác:\nCAU: ...\nA: ...\nB: ...\nC: ...\nD: ...\nDAP: A hoặc B hoặc C hoặc D\nGIAI: lời giải ngắn một dòng',{modelTier:'default'});
+  const qs=parseQs(r.text);if(!qs.length){b.textContent='AI trả về định dạng chưa đọc được. Hãy thử lại.';return}
+  runQuiz(qs,{title:lv!=null?'Level '+(lv+1)+' – '+t:'Luyện tập – '+t,topic:t,lv})}
+ catch(e){b.textContent=eMsg(e)}
+}
+let QZ=null;
+function runQuiz(qs,meta){QZ={qs,i:0,ok:0,meta};$('quiz').style.display='block';showQ();$('quiz').scrollIntoView()}
+function showQ(){
+ const z=QZ,q=z.qs[z.i],b=$('quiz');b.innerHTML='';
+ const h=document.createElement('h2'),p=document.createElement('p'),fb=document.createElement('div');
+ h.textContent=z.meta.title+' – câu '+(z.i+1)+'/'+z.qs.length;p.textContent=q.q;b.append(h,p);
+ q.o.forEach((t,k)=>{const o=document.createElement('button');o.className='opt';o.textContent=String.fromCharCode(65+k)+'. '+t;
+  o.onclick=()=>{if(z.done)return;z.done=1;const ok=k==q.a;if(ok)z.ok++;
+   [...b.querySelectorAll('.opt')].forEach((x,j)=>{x.style.borderColor=j==q.a?'#4ade80':j==k?'#f87171':''});
+   fb.innerHTML=(ok?'<b class="ok">Đúng!</b> ':'<b style="color:#ff9ab0">Chưa đúng.</b> ')+fmt(q.e||'');
+   addLog({topic:z.meta.topic,result:ok?'dung':'sai',support:'tu_lam',src:'quiz',item:q});
+   const n=document.createElement('button');n.className='btn pri';n.textContent=z.i+1<z.qs.length?'Câu tiếp':'Xem kết quả';
+   n.onclick=()=>{z.done=0;z.i++;z.i<z.qs.length?showQ():endQ()};fb.append(' ',n);typeset(b)};
+  b.append(o)});
+ b.append(fb);typeset(b);
+}
+function endQ(){
+ const z=QZ,n=z.qs.length;S.pts+=z.ok*10;if(z.ok==n&&n>1)S.perfect=true;
+ const pass=z.meta.lv!=null&&z.ok>=Math.ceil(n*.6);if(pass)S.prog[z.meta.lv]=true;save();
+ $('quiz').innerHTML='<h2>Kết quả: '+z.ok+'/'+n+'</h2><p>+'+z.ok*10+' điểm. '+(z.meta.lv!=null&&!pass?'Cần đúng ít nhất 60% để qua level, hãy thử lại.':'')+'</p><button class="btn pri" id="qb">Về bản đồ</button>';
+ $('qb').onclick=()=>{$('quiz').style.display='none'};drawMap();
+}
+/* Review with real data */
+const inRange=(d,days)=>days==0||(new Date(today())-new Date(d))/864e5<days;
+const COL={dung:'#4ade80',can_goi_y:'#fbbf24',sai:'#f87171'};
+const cnt=a=>({dung:a.filter(x=>x.result=='dung').length,can_goi_y:a.filter(x=>x.result=='can_goi_y').length,sai:a.filter(x=>x.result=='sai').length});
+const selfOK=a=>a.filter(x=>x.result=='dung'&&x.support=='tu_lam').length;
+const groupBy=(a,f)=>{const m={};a.forEach(x=>(m[f(x)]=m[f(x)]||[]).push(x));return m};
+function brow(l,a){const c=cnt(a),t=a.length||1;return '<div style="display:flex;gap:.5rem;align-items:center;margin:.3rem 0;font-size:.85rem"><span style="width:130px">'+esc(l)+'</span><div class="bar" style="flex:1;display:flex">'+['dung','can_goi_y','sai'].map(k=>'<b style="width:'+c[k]/t*100+'%;background:'+COL[k]+'"></b>').join('')+'</div><span>'+a.length+' bài</span></div>'}
+let RW='';
+function renderReview(){
+ if(!$('rbody'))document.querySelector('#v-review .grid3').outerHTML='<div id="rbody"><div class="row"><select id="rf" style="width:auto" onchange="renderReview()"><option value="1">Hôm nay</option><option value="7" selected>7 ngày</option><option value="30">30 ngày</option><option value="0">Tất cả</option></select><select id="rt" style="width:auto" onchange="renderReview()"></select></div><div id="rc"></div></div>';
+ const days=+$('rf').value,sel=$('rt').value,all=S.log.filter(x=>inRange(x.d,days));
+ $('rt').innerHTML='<option value="">Tất cả chủ đề</option>'+[...new Set(all.map(x=>x.topic))].map(t=>'<option value="'+esc(t)+'">'+esc(t)+'</option>').join('');$('rt').value=sel;
+ const L=$('rt').value?all.filter(x=>x.topic==sel):all,n=L.length;
+ $('rnote').textContent='Số liệu lấy từ các bài bạn đã làm trên trình duyệt này. '+(n<5?'Số bài còn ít nên xu hướng chỉ mang tính tham khảo.':'');
+ if(!n){$('rc').innerHTML='<div class="g solid card">Chưa có bài nào trong khoảng thời gian này. Hãy giải bài hoặc chơi một level để có dữ liệu.</div>';return}
+ const byD=groupBy(L,x=>x.d),byT=groupBy(L,x=>x.topic),E={};L.forEach(x=>(x.err||[]).forEach(e=>E[e]=(E[e]||0)+1));
+ const eK=Object.keys(E).sort((a,b)=>E[b]-E[a]),card='<div class="g solid card" style="margin-top:1rem">',lg='<p style="font-size:.8rem">🟩 đúng tự làm &nbsp; 🟨 cần gợi ý &nbsp; 🟥 sai</p>';
+ RW=Object.keys(byT).map(t=>[t,1-selfOK(byT[t])/byT[t].length]).sort((a,b)=>b[1]-a[1])[0][0];
+ const cur=selfOK(L)/n*100,rem=[];
+ if(days>0){const P=S.log.filter(x=>{const d=(new Date(today())-new Date(x.d))/864e5;return d>=days&&d<2*days&&(!sel||x.topic==sel)});rem.push(P.length?'Tỷ lệ tự làm đúng: '+(selfOK(P)/P.length*100).toFixed(0)+'% → '+cur.toFixed(0)+'% so với kỳ trước ('+P.length+' bài).':'Tỷ lệ tự làm đúng kỳ này: '+cur.toFixed(0)+'% (kỳ trước chưa có dữ liệu).')}else rem.push('Tỷ lệ tự làm đúng: '+cur.toFixed(0)+'%.');
+ rem.push('Chủ đề cần chú ý nhất: '+RW+(eK[0]?'; lỗi lặp lại nhiều nhất: '+eK[0]:'')+'.');
+ if(n<5)rem.push('Dữ liệu còn ít (dưới 5 bài), chưa đủ để kết luận tiến bộ hay đi xuống.');
+ const W=L.filter(x=>x.result=='sai');
+ const h='<div class="g solid card"><h2>Đúng – cần gợi ý – sai theo ngày</h2>'+lg+Object.keys(byD).sort().map(d=>brow(d,byD[d])).join('')+'</div>'
+ +card+'<h2>Kết quả theo chủ đề</h2>'+lg+Object.keys(byT).map(t=>brow(t,byT[t])).join('')+'</div>'
+ +card+'<h2>Các loại lỗi sai</h2>'+(eK.length?eK.map(e=>'<div style="display:flex;gap:.5rem;align-items:center;font-size:.85rem;margin:.3rem 0"><span style="width:130px">'+esc(e)+'</span><div class="bar" style="flex:1"><b style="width:'+E[e]/E[eK[0]]*100+'%"></b></div><span>'+E[e]+' lần</span></div>').join(''):'<p>Chưa có nhãn lỗi. Nhãn lỗi xuất hiện khi bạn dùng chế độ Kiểm tra.</p>')+'</div>'
+ +card+'<h2>Điểm vấn đáp</h2>'+(S.viva.filter(x=>inRange(x.d,days)).map(x=>'<div>'+esc(x.d)+' – '+esc(x.topic)+': <b>'+x.diem+'/10</b></div>').join('')||'<p>Chưa có buổi vấn đáp trong kỳ này.</p>')+'</div>'
+ +card+'<h2>Nhận xét</h2><ul>'+rem.map(r=>'<li>'+esc(r)+'</li>').join('')+'</ul><div class="row"><button class="btn pri" onclick="go(\'game\');genQs(RW,3,null)">Làm bài ngay</button><button class="btn pri" onclick="go(\'viva\');$(\'vt\').value=RW">Ôn lại ngay</button><button class="btn" onclick="aiPlan()">Nhận xét và kế hoạch ôn tập từ AI</button></div><div id="rai"></div></div>'
+ +card+'<h2>Các bài sai</h2>'+(W.map(x=>{const i=S.log.indexOf(x);return '<div class="row"><span style="flex:1">'+esc(x.d)+' – '+esc(x.topic)+'</span><button class="btn" onclick="redo('+i+')">Làm lại</button><button class="btn" onclick="look('+i+')">Xem lại</button></div>'}).join('')||'<p>Không có bài sai trong kỳ này.</p>')+'<div id="rlook" class="sol" style="display:none"></div></div>';
+ $('rc').innerHTML=h;typeset($('rc'));
+}
+function look(i){const x=S.log[i],b=$('rlook');b.style.display='block';b.innerHTML='<b>Xem lại</b><br>'+fmt(x.src=='quiz'?x.item.q+'\n'+x.item.o.map((t,k)=>String.fromCharCode(65+k)+'. '+t).join('\n')+'\nĐáp án đúng: '+String.fromCharCode(65+x.item.a)+'\n'+(x.item.e||''):x.prob);typeset(b)}
+function redo(i){const x=S.log[i];if(x.src=='quiz'){go('game');runQuiz([x.item],{title:'Làm lại',topic:x.topic,lv:null})}else{S.prob=x.prob;S.res={};$('prob').value=x.prob;go('solve')}}
+async function aiPlan(){
+ const o=$('rai');if(!SM){o.textContent=ERR.unavailable;return}o.textContent='Đang phân tích…';
+ const L=S.log.filter(x=>inRange(x.d,+$('rf').value)).map(x=>({ngay:x.d,chu_de:x.topic,ket_qua:x.result,ho_tro:x.support,loi:x.err||[]}));
+ try{const r=await ask(RULES+'\n\nDưới đây là dữ liệu THẬT về các bài người học đã làm (JSON). Chỉ dùng dữ liệu này, không bịa. Viết: ### Bạn đã làm tốt (2-3 điểm có dẫn chứng) ### Bạn đã sai gì (mô tả dễ hiểu, nhãn lỗi, lặp mấy lần, cách sửa) ### Bạn nên ôn lại gì (Cần ôn ngay / Nên ôn / Đã vững; nêu khái niệm hoặc công thức và cách ôn) ### Kế hoạch ôn tập (hôm nay hoặc ngày mai, sau 3 ngày, sau 7 ngày, kèm thời gian ước lượng như 15-20 phút). Nếu dưới 5 bài thì nói rõ chỉ mang tính tham khảo; trung thực, không khen quá mức.\n'+JSON.stringify(L),{modelTier:'default'});o.innerHTML=fmt(r.text);typeset(o)}
+ catch(e){o.textContent=eMsg(e)}
+}
+drawMap();
+
+/* ===== Casio FX-580 (verified calculators + AI keystroke guide) ===== */
+const CF={n:[['μ (trung bình)','mu'],['σ (độ lệch chuẩn, σ > 0)','sg'],['a (để trống nếu −∞)','a'],['b (để trống nếu +∞)','b']],b:[['n (số phép thử)','n'],['p (xác suất thành công)','p'],['k (số lần thành công)','k']],s:[['Dữ liệu, cách nhau bằng dấu cách hoặc dấu chấm phẩy','d']]};
+let CLAST='';
+function casioForm(){$('cf2').innerHTML=CF[$('ct').value].map(f=>'<label for="c_'+f[1]+'">'+f[0]+'</label><input id="c_'+f[1]+'">').join('');$('cout').textContent='';CLAST=''}
+const num=s=>{s=s.trim().replace(',','.');return s===''?NaN:+s};
+const N4=v=>String(+v.toFixed(4)).replace('.','{,}');
+function lnC(n,i){let s=0;for(let j=1;j<=i;j++)s+=Math.log((n-i+j)/j);return s}
+function pmf(n,p,i){if(p==0)return i==0?1:0;if(p==1)return i==n?1:0;return Math.exp(lnC(n,i)+i*Math.log(p)+(n-i)*Math.log(1-p))}
+function casioRun(){
+ const k=$('ct').value,g=i=>$('c_'+i).value,o=$('cout');let h='',err='';
+ if(k=='n'){const mu=num(g('mu')),sg=num(g('sg')),a=num(g('a')),b=num(g('b'));
+  if(isNaN(mu)||!(sg>0))err='Hãy nhập μ và σ > 0.';else{const za=isNaN(a)?null:(a-mu)/sg,zb=isNaN(b)?null:(b-mu)/sg,pa=za==null?0:Phi(za),pb=zb==null?1:Phi(zb);
+   if(pb<pa)err='Cần a < b.';else h='\\(z_a='+(za==null?'-\\infty':N4(za))+',\\ z_b='+(zb==null?'+\\infty':N4(zb))+'\\)<br>\\(P(a<X<b)=\\Phi(z_b)-\\Phi(z_a)='+N4(pb)+'-'+N4(pa)+'='+N4(pb-pa)+'\\)'}}
+ else if(k=='b'){const n=num(g('n')),p=num(g('p')),kk=num(g('k'));
+  if(!Number.isInteger(n)||n<0||n>5000||!(p>=0&&p<=1)||!Number.isInteger(kk)||kk<0||kk>n)err='Cần n nguyên (0–5000), 0 ≤ p ≤ 1 và k nguyên với 0 ≤ k ≤ n.';
+  else{let c=0;for(let i=0;i<=kk;i++)c+=pmf(n,p,i);h='\\(X\\sim B('+n+';'+g('p').replace(',','{,}')+')\\)<br>\\(P(X='+kk+')='+N4(pmf(n,p,kk))+'\\)<br>\\(P(X\\le '+kk+')='+N4(c)+'\\)'}}
+ else{const d=g('d').split(/[\s;]+/).filter(Boolean).map(num);
+  if(d.length<2||d.some(isNaN))err='Hãy nhập ít nhất 2 số hợp lệ.';
+  else{const n=d.length,m=d.reduce((a,b)=>a+b,0)/n,ss=d.reduce((a,b)=>a+(b-m)*(b-m),0);h='\\(n='+n+',\\ \\bar{x}='+N4(m)+'\\)<br>\\(s='+N4(Math.sqrt(ss/(n-1)))+'\\) (độ lệch chuẩn mẫu, chia cho \\(n-1\\))<br>\\(\\sigma='+N4(Math.sqrt(ss/n))+'\\) (độ lệch chuẩn tổng thể, chia cho \\(n\\))'}}
+ if(err){o.textContent=err;CLAST='';return}
+ o.innerHTML=h;typeset(o);CLAST='Dạng bài: '+$('ct').selectedOptions[0].text+'. Dữ liệu: '+[...document.querySelectorAll('#cf2 input')].map(i=>i.value).join(' | ')+'. Kết quả đã tính: '+h.replace(/<br>/g,' ')
+}
+async function casioAI(){
+ const o=$('cout');if(!CLAST){toast('Hãy bấm Tính trước.');return}if(!SM){toast(ERR.unavailable);return}
+ const d=document.createElement('div');d.style.marginTop='1rem';d.textContent='Đang viết hướng dẫn bấm máy…';o.append(d);
+ try{const r=await ask(RULES+'\n\nHướng dẫn bấm máy tính Casio fx-580VN X để giải bài sau, từng bước đánh số, nêu chế độ (MODE) và menu cần chọn, và kết quả máy cần hiện để người học đối chiếu với kết quả đã tính. Nếu không chắc tên phím hoặc menu thì nói rõ và nhắc người học đối chiếu sách hướng dẫn của máy. '+CLAST,{modelTier:'default'});d.innerHTML=fmt(r.text)+'<p style="color:var(--gold);font-size:.85rem">Hướng dẫn phím do AI viết: hãy đối chiếu với sách hướng dẫn của máy.</p>';typeset(d)}catch(e){d.textContent=eMsg(e)}
+}
+/* ===== Luyện Bẫy Thi ===== */
+async function genTrap(){
+ const t=$('tt').value.trim()||'Xác suất cơ bản',n=$('tn').value;if(!SM){toast(ERR.unavailable);return}
+ const b=$('quiz');$('tslot').append(b);b.style.display='block';b.textContent='Đang tạo đề luyện bẫy…';
+ try{const r=await ask('Tạo '+n+' câu trắc nghiệm 4 đáp án về "'+t+'" môn Xác suất Thống kê đại học, mỗi câu chứa một BẪY thường gặp trong đề thi (ví dụ nhầm σ² với σ, quên chuẩn hóa về chuẩn tắc, nhầm P(A∩B) với P(A|B), nhầm P(X<a) với P(X≤a) ở biến rời rạc, nhầm phương sai mẫu với tổng thể, quên điều kiện áp dụng). Các đáp án sai phải là kết quả của đúng bẫy đó. Tự tính kiểm tra để đáp án đúng chắc chắn. Công thức LaTeX trong \\( ... \\), số thập phân dùng dấu phẩy. Đúng định dạng, các câu cách nhau một dòng ---, không thêm chữ nào khác:\nCAU: ...\nA: ...\nB: ...\nC: ...\nD: ...\nDAP: A hoặc B hoặc C hoặc D\nGIAI: Bẫy: <bẫy là gì>. Lời giải: <ngắn gọn>',{modelTier:'default'});
+  const qs=parseQs(r.text);if(!qs.length){b.textContent='AI trả về định dạng chưa đọc được. Hãy thử lại.';return}
+  runQuiz(qs,{title:'Luyện bẫy – '+t,topic:t,lv:null})}catch(e){b.textContent=eMsg(e)}
+}
+const _go2=go;go=function(v,x){_go2(v,x);if(v=='trap')$('tslot').append($('quiz'));else if(v=='game')$('gift').after($('quiz'))};
+/* ===== Charts: line, pie, radar, clickable rows ===== */
+function brow(l,a){const c=cnt(a),t=a.length||1;return '<div data-k="'+esc(l)+'" onclick="pick(this.dataset.k)" title="Bấm để xem danh sách bài" style="cursor:pointer;display:flex;gap:.5rem;align-items:center;margin:.3rem 0;font-size:.85rem"><span style="width:130px">'+esc(l)+'</span><div class="bar" style="flex:1;display:flex">'+['dung','can_goi_y','sai'].map(k=>'<b style="width:'+c[k]/t*100+'%;background:'+COL[k]+'"></b>').join('')+'</div><span>'+a.length+' bài</span></div>'}
+function pick(k){const days=+$('rf').value,b=$('rpick');if(!b)return;const A=S.log.map((x,i)=>[x,i]).filter(p=>inRange(p[0].d,days)&&(p[0].d==k||p[0].topic==k));b.style.display='block';b.innerHTML='<b>'+esc(k)+'</b>'+A.map(([x,i])=>'<div class="row"><span style="flex:1">'+esc(x.topic)+' – '+({dung:'đúng',can_goi_y:'cần gợi ý',sai:'sai'})[x.result]+'</span>'+(x.result=='sai'?'<button class="btn" onclick="redo('+i+')">Làm lại</button><button class="btn" onclick="look('+i+')">Xem lại</button>':'')+'</div>').join('')}
+function svgLine(P,title,yl,mx){const W=340,H=170,l=38,b=30,t=14,r=10,iw=W-l-r,ih=H-t-b,X=i=>l+(P.length>1?i*iw/(P.length-1):iw/2),Y=v=>t+ih-v/mx*ih;
+ let s='<svg viewBox="0 0 '+W+' '+H+'" style="max-width:100%" role="img" aria-label="'+esc(title)+'"><g fill="#b7c3ee" font-size="9"><text x="2" y="10">'+esc(yl)+'</text>';
+ [0,.5,1].forEach(f=>{const y=Y(mx*f);s+='<line x1="'+l+'" x2="'+(W-r)+'" y1="'+y+'" y2="'+y+'" stroke="#fff3"/><text x="'+(l-4)+'" y="'+(y+3)+'" text-anchor="end">'+mx*f+'</text>'});
+ P.forEach((p,i)=>{s+='<text x="'+X(i)+'" y="'+(H-12)+'" text-anchor="middle">'+esc(p.l.slice(5))+'</text>'});
+ return '<h3>'+esc(title)+'</h3>'+s+'</g><polyline fill="none" stroke="#3fe0ff" stroke-width="2" points="'+P.map((p,i)=>X(i)+','+Y(p.v)).join(' ')+'"/>'+P.map((p,i)=>'<circle cx="'+X(i)+'" cy="'+Y(p.v)+'" r="3.5" fill="#ff5fd2"><title>'+esc(p.l)+': '+p.v.toFixed(1)+'</title></circle>').join('')+'</svg>'}
+function svgPie(E,title){const ks=Object.keys(E),tot=ks.reduce((a,k)=>a+E[k],0),C=['#3fe0ff','#a78bfa','#ff5fd2','#ffd66b','#4ade80','#f87171'];let a0=-Math.PI/2,s='';
+ ks.forEach((k,i)=>{const a1=a0+E[k]/tot*2*Math.PI;s+=ks.length==1?'<circle cx="70" cy="70" r="60" fill="'+C[0]+'"/>':'<path d="M70 70 L'+(70+60*Math.cos(a0))+' '+(70+60*Math.sin(a0))+' A60 60 0 '+(a1-a0>Math.PI?1:0)+' 1 '+(70+60*Math.cos(a1))+' '+(70+60*Math.sin(a1))+' Z" fill="'+C[i%6]+'"/>';a0=a1});
+ return '<h3>'+title+'</h3><div class="row"><svg viewBox="0 0 140 140" width="140" role="img" aria-label="'+title+'">'+s+'</svg><div style="font-size:.85rem">'+ks.map((k,i)=>'<div><span style="color:'+C[i%6]+'">■</span> '+esc(k)+': '+E[k]+' lần ('+(E[k]/tot*100).toFixed(0)+'%)</div>').join('')+'</div></div>'}
+function svgRadar(T,title){const n=T.length,R=70,c=100,pt=(i,v)=>[c+R*v*Math.sin(2*Math.PI*i/n),c-R*v*Math.cos(2*Math.PI*i/n)];let s='';
+ [.25,.5,.75,1].forEach(f=>{s+='<polygon fill="none" stroke="#fff3" points="'+T.map((_,i)=>pt(i,f).join(',')).join(' ')+'"/>'});
+ T.forEach((p,i)=>{const q=pt(i,1.2);s+='<text x="'+q[0]+'" y="'+q[1]+'" text-anchor="middle" font-size="8" fill="#b7c3ee">'+esc(p.l.slice(0,14))+'</text>'});
+ return '<h3>'+esc(title)+'</h3><svg viewBox="0 0 200 200" style="max-width:260px" role="img" aria-label="'+esc(title)+'">'+s+'<polygon fill="#3fe0ff55" stroke="#3fe0ff" points="'+T.map((p,i)=>pt(i,p.v).join(',')).join(' ')+'"/></svg><p style="font-size:.8rem;color:var(--mut)">Trục: tỷ lệ tự làm đúng (0–100%) theo chủ đề.</p>'}
+const _rr=renderReview;
+renderReview=function(){_rr();const rc=$('rc'),days=+$('rf').value,sel=$('rt').value,L=S.log.filter(x=>inRange(x.d,days)&&(!sel||x.topic==sel));if(!rc||!L.length)return;
+ const byD=groupBy(L,x=>x.d),byT=groupBy(L,x=>x.topic),E={};L.forEach(x=>(x.err||[]).forEach(e=>E[e]=(E[e]||0)+1));
+ let h='<div class="g solid card" style="margin-top:1rem"><h2>Biểu đồ xu hướng</h2><div class="grid3" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">';
+ h+='<div>'+svgLine(Object.keys(byD).sort().map(d=>({l:d,v:selfOK(byD[d])/byD[d].length*100})),'Tỷ lệ tự làm đúng theo ngày','%',100)+'</div>';
+ if(Object.keys(E).length)h+='<div>'+svgPie(E,'Tỷ trọng các loại lỗi')+'</div>';
+ const T=Object.keys(byT);h+='<div>'+(T.length>=3?svgRadar(T.map(t=>({l:t,v:selfOK(byT[t])/byT[t].length})),'Mạnh – yếu theo chủ đề'):'<h3>Mạnh – yếu theo chủ đề</h3><p>Cần từ 3 chủ đề để vẽ radar.</p>')+'</div>';
+ const V=S.viva.filter(x=>inRange(x.d,days));if(V.length)h+='<div>'+svgLine(V.map(x=>({l:x.d,v:x.diem})),'Điểm vấn đáp theo thời gian','điểm /10',10)+'</div>';
+ rc.insertAdjacentHTML('beforeend',h+'</div><p style="font-size:.8rem;color:var(--mut)">Mẹo: bấm vào một dòng ở biểu đồ cột phía trên để xem danh sách bài của mốc đó.</p><div id="rpick" class="sol" style="display:none;margin-top:1rem"></div></div>')};
+/* ===== Deep-space layers: nebula, spiral galaxy, planets, asteroids ===== */
+(function(){const c=document.createElement('canvas');c.style.cssText='position:fixed;inset:0;z-index:-1;width:100%;height:100%';$('cv').before(c);
+ const x=c.getContext('2d'),red=matchMedia('(prefers-reduced-motion:reduce)').matches;let W,H,mx=0,my=0;
+ const sz=()=>{W=c.width=innerWidth;H=c.height=innerHeight};addEventListener('resize',sz);sz();addEventListener('mousemove',e=>{mx=e.clientX/W-.5;my=e.clientY/H-.5});
+ const neb=[[.2,.25,.45,'167,139,250'],[.8,.35,.4,'63,224,255'],[.55,.85,.4,'255,95,210'],[.1,.8,.3,'255,214,107']];
+ const pl=[{x:.88,y:.78,r:56,c:['#7dd3fc','#1e3a8a']},{x:.1,y:.18,r:36,c:['#c4b5fd','#4c1d95'],ring:1},{x:.72,y:.12,r:20,c:['#fcd34d','#b45309']}];
+ const ast=Array.from({length:45},()=>({x:Math.random()*2000,y:H*(.55+Math.random()*.4),v:.1+Math.random()*.4,s:Math.random()*2+.6}));
+ function f(t){x.clearRect(0,0,W,H);
+  neb.forEach((n,i)=>{const cx=(n[0]+Math.sin(t/9000+i)*.04-mx*.03)*W,cy=(n[1]+Math.cos(t/11000+i)*.04-my*.03)*H,g=x.createRadialGradient(cx,cy,0,cx,cy,n[2]*Math.max(W,H)),a=.22+.08*Math.sin(t/5000+i);g.addColorStop(0,'rgba('+n[3]+','+a+')');g.addColorStop(1,'rgba('+n[3]+',0)');x.fillStyle=g;x.fillRect(0,0,W,H)});
+  x.save();x.translate(W*.3-mx*20,H*.72-my*20);x.rotate(t/60000);x.scale(1,.45);
+  for(let k=0;k<260;k++){const a=k*.15,rr=k*.9,px=Math.cos(a)*rr,py=Math.sin(a)*rr;x.fillStyle='rgba('+(k%2?'180,200,255':'255,200,240')+','+(.75-k/400)+')';x.fillRect(px,py,1.7,1.7);x.fillRect(-px,-py,1.7,1.7)}
+  x.fillStyle='rgba(255,240,200,.9)';x.beginPath();x.arc(0,0,5,0,6.3);x.fill();x.restore();
+  pl.forEach((p,i)=>{const cx=p.x*W-mx*40,cy=p.y*H-my*40,g=x.createRadialGradient(cx-p.r*.35,cy-p.r*.35,p.r*.1,cx,cy,p.r);g.addColorStop(0,p.c[0]);g.addColorStop(1,p.c[1]);
+   if(p.ring){x.strokeStyle='rgba(255,230,255,.55)';x.lineWidth=3;x.beginPath();x.ellipse(cx,cy,p.r*1.7,p.r*.4,-.4+Math.sin(t/8000)*.05,0,6.3);x.stroke()}
+   x.fillStyle=g;x.beginPath();x.arc(cx,cy,p.r,0,6.3);x.fill();x.strokeStyle='rgba(180,220,255,.35)';x.lineWidth=1.5;x.stroke()});
+  x.fillStyle='rgba(190,185,200,.7)';ast.forEach(s=>{s.x=(s.x+s.v)%(W+40);x.fillRect(s.x-mx*60,s.y-my*60,s.s,s.s*.8)});
+  if(!red)requestAnimationFrame(f)}
+ requestAnimationFrame(f)})();
+casioForm();
+
+</script>
+</body>
+</html>
