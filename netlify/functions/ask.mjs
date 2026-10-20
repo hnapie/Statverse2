@@ -8,6 +8,23 @@ const MODEL = process.env.GEMINI_MODEL || 'gemini-flash-latest';
 const bad = (s, m) => new Response(m, { status: s });
 
 export default async (req) => {
+  // Trang kiểm tra nhanh: mở https://<trang-của-bạn>/api/ask?test=1 trên trình duyệt
+  if (req.method === 'GET') {
+    const info = { keySet: !!process.env.GEMINI_API_KEY, model: MODEL, limitPerHour: LIMIT };
+    if (new URL(req.url).searchParams.get('test') !== '1' || !info.keySet) return Response.json(info);
+    const t0 = Date.now();
+    try {
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(MODEL)}:generateContent`, {
+        method: 'POST',
+        headers: { 'x-goog-api-key': process.env.GEMINI_API_KEY, 'content-type': 'application/json' },
+        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: 'Trả lời đúng một từ: OK' }] }], generationConfig: { maxOutputTokens: 200 } }),
+      });
+      const txt = (await r.text()).replace(/AIza\S+/g, '***').slice(0, 400);
+      return Response.json({ ...info, geminiStatus: r.status, ms: Date.now() - t0, response: txt });
+    } catch (e) {
+      return Response.json({ ...info, error: String(e).slice(0, 200) });
+    }
+  }
   if (req.method !== 'POST') return bad(405, 'Method not allowed');
   const allowed = process.env.ALLOWED_ORIGIN;
   if (allowed && req.headers.get('origin') !== allowed) return bad(403, 'Forbidden');
@@ -38,11 +55,11 @@ export default async (req) => {
     {
       method: 'POST',
       headers: { 'x-goog-api-key': process.env.GEMINI_API_KEY, 'content-type': 'application/json' },
-      body: JSON.stringify({ contents, generationConfig: { maxOutputTokens: b.tier === 'complex' ? 4000 : 2500 } }),
+      body: JSON.stringify({ contents, generationConfig: { maxOutputTokens: b.tier === 'complex' ? 8000 : 6000 } }),
     }
   );
   if (up.status === 429) return bad(429, 'Rate limited by provider');
-  if (!up.ok) return bad(502, 'Upstream error ' + up.status);
+  if (!up.ok) { const t = (await up.text().catch(() => '')).slice(0, 200); console.error('Gemini error', up.status, t); return bad(up.status === 429 || up.status === 503 ? up.status : 502, 'Gemini ' + up.status + ' ' + t); }
   return new Response(convert(up.body), { headers: { 'content-type': 'text/event-stream', 'cache-control': 'no-store' } });
 };
 export const config = { path: '/api/ask' };
