@@ -359,15 +359,15 @@ function Phi(z){let s=0,t=z,k=0;if(Math.abs(z)>6)return z>0?1:0;let sum=z;for(k=
 async function imgB64(f){const b=await createImageBitmap(f),k=Math.min(1,1600/Math.max(b.width,b.height)),c=document.createElement('canvas');c.width=Math.round(b.width*k);c.height=Math.round(b.height*k);c.getContext('2d').drawImage(b,0,0,c.width,c.height);return c.toDataURL('image/jpeg',.85).split(',')[1]}
 const SM=async(input,o={})=>{
  const turns=typeof input=='string'?[{role:'user',content:input}]:input,images=[];
- for(const f of(o.images||[]))images.push(await imgB64(f));
- let r;try{r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:turns,images,tier:o.modelTier||'default'})})}catch(e){throw{code:'network'}}
- if(!r.ok)throw{code:r.status==429?'rate_limited':'server'};
+ for(const f of(o.images||[])){try{images.push(await imgB64(f))}catch(e){throw{code:'badimg'}}}
+ const go1=()=>fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:turns,images,tier:o.modelTier||'default'})});let r;try{r=await go1();if(r.status==429||r.status==503){await new Promise(z=>setTimeout(z,3000));r=await go1()}}catch(e){throw{code:'network'}}
+ if(!r.ok){let d='';try{d=(await r.text()).replace(/AIza\S+/g,'***').slice(0,160)}catch(e){}throw{code:r.status==429?'rate_limited':'server',detail:r.status+(d?': '+d:'')}}
  const rd=r.body.getReader(),dec=new TextDecoder();let buf='',text='';
  for(;;){const{done,value}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});const parts=buf.split('\n\n');buf=parts.pop();
   for(const p of parts){const l=p.split('\n').find(x=>x.startsWith('data: '));if(!l)continue;let j;try{j=JSON.parse(l.slice(6))}catch(e){continue}
    if(j.type=='content_block_delta'&&j.delta&&j.delta.text){text+=j.delta.text;if(o.onText)o.onText({text,delta:j.delta.text})}
    if(j.type=='error')throw{code:'server',text}}}
- if(!text)throw{code:'server'};return{text,truncated:false}};
+ if(!text)throw{code:'empty'};return{text,truncated:false}};
 S.res={};S.prog={};S.pts=0;S.viva=[];S.perfect=false;
 try{const j=JSON.parse(localStorage.getItem('sv_state')||'null');if(j)Object.assign(S,j)}catch(e){}
 function save(){try{localStorage.setItem('sv_state',JSON.stringify({log:S.log,prog:S.prog,pts:S.pts,viva:S.viva,perfect:S.perfect}))}catch(e){}}
@@ -375,8 +375,8 @@ if(!Array.isArray(S.log)||(S.log[0]&&!S.log[0].d))S.log=[];
 const today=()=>new Date().toISOString().slice(0,10);
 function addLog(o){S.log.push(Object.assign({d:today()},o));save()}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
-const ERR={network:'Không kết nối được máy chủ AI. Hãy kiểm tra mạng rồi thử lại.',server:'Máy chủ AI đang lỗi hoặc quá tải, hãy thử lại sau.',rate_limited:'Đang gửi quá nhiều yêu cầu, hãy đợi một chút rồi thử lại.',unavailable:'Chức năng AI chưa sẵn sàng.'};
-const eMsg=e=>ERR[e&&e.code]||'Không gọi được AI, hãy thử lại sau.';
+const ERR={network:'Không kết nối được máy chủ AI. Hãy kiểm tra mạng rồi thử lại.',server:'Máy chủ AI báo lỗi, hãy thử lại sau.',empty:'AI không trả về nội dung. Hãy thử lại hoặc dùng ảnh rõ hơn.',badimg:'Không đọc được ảnh này. Hãy dùng ảnh JPG hoặc PNG (ảnh HEIC của iPhone cần đổi sang JPG).',rate_limited:'Đang gửi quá nhiều yêu cầu, hãy đợi một chút rồi thử lại.',unavailable:'Chức năng AI chưa sẵn sàng.'};
+const eMsg=e=>(ERR[e&&e.code]||'Không gọi được AI, hãy thử lại sau.')+(e&&e.detail?' ['+e.detail+']':'');
 async function ask(input,o={}){if(!SM)throw{code:'unavailable'};return SM(input,Object.assign({cache:false},o))}
 function fmt(t){return esc(t).replace(/^### ?(.*)$/gm,'<h3>$1</h3>').replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>').replace(/<\/h3><br>/g,'</h3>')}
 function meta(t){const g=k=>(t.match(new RegExp('^\\s*'+k+':\\s*(.*)$','m'))||[])[1];return{topic:(g('CHUDE')||'').trim(),kq:(g('KETQUA')||'').trim().toLowerCase(),err:(g('LOI')||'').split(/[,;]/).map(s=>s.trim()).filter(s=>s&&!/^(không|khong|none)/i.test(s)),clean:t.replace(/^\s*(CHUDE|KETQUA|LOI):.*$/gm,'').trim()}}
