@@ -18,11 +18,12 @@ export default async (req) => {
         method: 'POST',
         headers: { 'x-goog-api-key': process.env.GEMINI_API_KEY, 'content-type': 'application/json' },
         body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: 'Trả lời đúng một từ: OK' }] }], generationConfig: { maxOutputTokens: 200 } }),
+        signal: AbortSignal.timeout(8000),
       });
       const txt = (await r.text()).replace(/AIza\S+/g, '***').slice(0, 400);
       return Response.json({ ...info, geminiStatus: r.status, ms: Date.now() - t0, response: txt });
     } catch (e) {
-      return Response.json({ ...info, error: String(e).slice(0, 200) });
+      return Response.json({ ...info, error: String(e).slice(0, 200), hint: 'Gemini không trả lời trong 8 giây: model chậm hoặc mạng bị nghẽn. Thử model Flash-Lite hoặc đổi GEMINI_MODEL.' });
     }
   }
   if (req.method !== 'POST') return bad(405, 'Method not allowed');
@@ -50,16 +51,38 @@ export default async (req) => {
   const contents = m.map((x) => ({ role: x.role === 'assistant' ? 'model' : 'user', parts: [{ text: x.content }] }));
   contents[contents.length - 1].parts.unshift(...imgs.map((data) => ({ inline_data: { mime_type: 'image/jpeg', data } })));
 
-  const up = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(MODEL)}:streamGenerateContent?alt=sse`,
-    {
-      method: 'POST',
-      headers: { 'x-goog-api-key': process.env.GEMINI_API_KEY, 'content-type': 'application/json' },
-      body: JSON.stringify({ contents, generationConfig: { maxOutputTokens: b.tier === 'complex' ? 8000 : 6000 } }),
-    }
-  );
-  if (up.status === 429) return bad(429, 'Rate limited by provider');
-  if (!up.ok) { const t = (await up.text().catch(() => '')).slice(0, 200); console.error('Gemini error', up.status, t); return bad(up.status === 429 || up.status === 503 ? up.status : 502, 'Gemini ' + up.status + ' ' + t); }
-  return new Response(convert(up.body), { headers: { 'content-type': 'text/event-stream', 'cache-control': 'no-store' } });
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(MODEL)}:streamGenerateContent?alt=sse`;
+  const payload = JSON.stringify({ contents, generationConfig: { maxOutputTokens: b.tier === 'complex' ? 8000 : 6000 } });
+  const TIMEOUT = Number(process.env.UPSTREAM_TIMEOUT_MS || 25000);
+  const enc = new TextEncoder();
+  const evt = (o) => enc.encode('data: ' + JSON.stringify(o) + '\n\n');
+
+  // Gửi ngay một byte để Netlify không báo "Inactivity Timeout", rồi mới chờ Gemini.
+  const stream = new ReadableStream({
+    async start(c) {
+      c.enqueue(enc.encode(': ok\n\n'));
+      const ctl = new AbortController();
+      const tm = setTimeout(() => ctl.abort(), TIMEOUT);
+      try {
+        const up = await fetch(url, {
+          method: 'POST',
+          headers: { 'x-goog-api-key': process.env.GEMINI_API_KEY, 'content-type': 'application/json' },
+          body: payload,
+          signal: ctl.signal,
+        });
+        if (!up.ok) {
+          const t = (await up.text().catch(() => '')).replace(/AIza\S+/g, '***').slice(0, 200);
+          console.error('Gemini error', up.status, t);
+          c.enqueue(evt({ type: 'error', status: up.status, message: t }));
+        } else {
+          const reader = convert(up.body).getReader();
+          for (;;) { const { done, value } = await reader.read(); if (done) break; c.enqueue(value); }
+        }
+      } catch (e) {
+        c.enqueue(evt({ type: 'error', status: 0, message: e.name === 'AbortError' ? 'Gemini không trả lời kịp (timeout)' : String(e).slice(0, 100) }));
+      } finally { clearTimeout(tm); c.close(); }
+    },
+  });
+  return new Response(stream, { headers: { 'content-type': 'text/event-stream', 'cache-control': 'no-store' } });
 };
 export const config = { path: '/api/ask' };
