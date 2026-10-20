@@ -357,17 +357,29 @@ function Phi(z){let s=0,t=z,k=0;if(Math.abs(z)>6)return z>0?1:0;let sum=z;for(k=
 <script>
 /* AI qua máy chủ riêng (/api/ask), không phụ thuộc claude.ai */
 async function imgB64(f){const b=await createImageBitmap(f),k=Math.min(1,1600/Math.max(b.width,b.height)),c=document.createElement('canvas');c.width=Math.round(b.width*k);c.height=Math.round(b.height*k);c.getContext('2d').drawImage(b,0,0,c.width,c.height);return c.toDataURL('image/jpeg',.85).split(',')[1]}
+const GK={key:'',model:'gemini-flash-latest'},GT=90000;
+try{GK.key=localStorage.getItem('sv_gkey')||'';GK.model=localStorage.getItem('sv_gmodel')||GK.model}catch(e){}
+const GU='https://generativelanguage.googleapis.com/v1beta/models/';
+async function gErr(r){let m='';try{const j=await r.json();m=(j.error&&j.error.message)||''}catch(e){}return m.replace(/AIza\S+/g,'***').slice(0,160)}
 const SM=async(input,o={})=>{
- const turns=typeof input=='string'?[{role:'user',content:input}]:input,images=[];
- for(const f of(o.images||[])){try{images.push(await imgB64(f))}catch(e){throw{code:'badimg'}}}
- const go1=()=>fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:turns,images,tier:o.modelTier||'default'})});let r;try{r=await go1();if(r.status==429||r.status==503){await new Promise(z=>setTimeout(z,3000));r=await go1()}}catch(e){throw{code:'network'}}
- if(!r.ok){let d='';try{d=(await r.text()).replace(/AIza\S+/g,'***').slice(0,160)}catch(e){}throw{code:r.status==429?'rate_limited':'server',detail:r.status+(d?': '+d:'')}}
- const rd=r.body.getReader(),dec=new TextDecoder();let buf='',text='';
- for(;;){const{done,value}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});const parts=buf.split('\n\n');buf=parts.pop();
-  for(const p of parts){const l=p.split('\n').find(x=>x.startsWith('data: '));if(!l)continue;let j;try{j=JSON.parse(l.slice(6))}catch(e){continue}
-   if(j.type=='content_block_delta'&&j.delta&&j.delta.text){text+=j.delta.text;if(o.onText)o.onText({text,delta:j.delta.text})}
-   if(j.type=='error')throw{code:j.status==429?'rate_limited':'server',detail:((j.status||'')+' '+(j.message||'')).trim()}}}
- if(!text)throw{code:'empty'};return{text,truncated:false}};
+ if(!GK.key){openKey();throw{code:'nokey'}}
+ const turns=typeof input=='string'?[{role:'user',content:input}]:input;
+ const contents=turns.map(t=>({role:t.role=='assistant'?'model':'user',parts:[{text:t.content}]}));
+ for(const f of(o.images||[])){let d;try{d=await imgB64(f)}catch(e){throw{code:'badimg'}}contents[contents.length-1].parts.unshift({inline_data:{mime_type:'image/jpeg',data:d}})}
+ const body=JSON.stringify({contents,generationConfig:{maxOutputTokens:o.modelTier=='complex'?8000:6000}});
+ const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),GT);
+ const go1=()=>fetch(GU+encodeURIComponent(GK.model)+':streamGenerateContent?alt=sse',{method:'POST',headers:{'x-goog-api-key':GK.key,'content-type':'application/json'},body,signal:ctl.signal});
+ try{
+  let r;try{r=await go1();if(r.status==429||r.status==503){await new Promise(z=>setTimeout(z,3000));r=await go1()}}catch(e){throw{code:e&&e.name=='AbortError'?'timeout':'network'}}
+  if(!r.ok){const d=await gErr(r);throw{code:r.status==429?'rate_limited':((r.status==400&&/API key/i.test(d))||r.status==401||r.status==403)?'badkey':r.status==404?'nomodel':'server',detail:r.status+(d?': '+d:'')}}
+  const rd=r.body.getReader(),dec=new TextDecoder();let buf='',text='';
+  try{for(;;){const{done,value}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true}).replace(/\r\n/g,'\n');const parts=buf.split('\n\n');buf=parts.pop();
+   for(const p of parts){const l=p.split('\n').find(x=>x.startsWith('data:'));if(!l)continue;let j;try{j=JSON.parse(l.slice(5).trim())}catch(e){continue}
+    for(const q of(j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts)||[]){if(q.thought||typeof q.text!='string')continue;text+=q.text;if(o.onText)o.onText({text,delta:q.text})}}}}
+  catch(e){if(e&&e.name=='AbortError')throw{code:'timeout'};throw e}
+  if(!text)throw{code:'empty'};return{text,truncated:false}
+ }finally{clearTimeout(tm)}
+};
 S.res={};S.prog={};S.pts=0;S.viva=[];S.perfect=false;
 try{const j=JSON.parse(localStorage.getItem('sv_state')||'null');if(j)Object.assign(S,j)}catch(e){}
 function save(){try{localStorage.setItem('sv_state',JSON.stringify({log:S.log,prog:S.prog,pts:S.pts,viva:S.viva,perfect:S.perfect}))}catch(e){}}
@@ -375,7 +387,7 @@ if(!Array.isArray(S.log)||(S.log[0]&&!S.log[0].d))S.log=[];
 const today=()=>new Date().toISOString().slice(0,10);
 function addLog(o){S.log.push(Object.assign({d:today()},o));save()}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
-const ERR={network:'Không kết nối được máy chủ AI. Hãy kiểm tra mạng rồi thử lại.',server:'Máy chủ AI báo lỗi, hãy thử lại sau.',empty:'AI không trả về nội dung. Hãy thử lại hoặc dùng ảnh rõ hơn.',badimg:'Không đọc được ảnh này. Hãy dùng ảnh JPG hoặc PNG (ảnh HEIC của iPhone cần đổi sang JPG).',rate_limited:'Đang gửi quá nhiều yêu cầu, hãy đợi một chút rồi thử lại.',unavailable:'Chức năng AI chưa sẵn sàng.'};
+const ERR={nokey:'Bạn cần nhập khóa Gemini miễn phí ở nút “🔑 Khóa AI” trước khi dùng AI.',badkey:'Khóa Gemini không hợp lệ hoặc bị từ chối. Hãy kiểm tra lại ở nút “🔑 Khóa AI”.',nomodel:'Tên model không tồn tại. Hãy chọn model khác ở nút “🔑 Khóa AI”.',timeout:'Gemini trả lời quá chậm. Hãy thử lại hoặc chọn model nhẹ hơn ở nút “🔑 Khóa AI”.',network:'Không kết nối được máy chủ AI. Hãy kiểm tra mạng rồi thử lại.',server:'Máy chủ AI báo lỗi, hãy thử lại sau.',empty:'AI không trả về nội dung. Hãy thử lại hoặc dùng ảnh rõ hơn.',badimg:'Không đọc được ảnh này. Hãy dùng ảnh JPG hoặc PNG (ảnh HEIC của iPhone cần đổi sang JPG).',rate_limited:'Đang gửi quá nhiều yêu cầu, hãy đợi một chút rồi thử lại.',unavailable:'Chức năng AI chưa sẵn sàng.'};
 const eMsg=e=>(ERR[e&&e.code]||'Không gọi được AI, hãy thử lại sau.')+(e&&e.detail?' ['+e.detail+']':'');
 async function ask(input,o={}){if(!SM)throw{code:'unavailable'};return SM(input,Object.assign({cache:false},o))}
 function fmt(t){return esc(t).replace(/^### ?(.*)$/gm,'<h3>$1</h3>').replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>').replace(/<\/h3><br>/g,'</h3>')}
@@ -619,6 +631,33 @@ renderReview=function(){_rr();const rc=$('rc'),days=+$('rf').value,sel=$('rt').v
   if(!red)requestAnimationFrame(f)}
  requestAnimationFrame(f)})();
 casioForm();
+
+/* ===== Khóa AI (mỗi người dùng khóa Gemini miễn phí của riêng mình) ===== */
+(function(){
+ const a=document.createElement('a');a.id='aiKey';a.textContent='🔑 Khóa AI';a.onclick=openKey;$('nav').insertBefore(a,$('acc'));
+ const m=document.createElement('div');m.id='kmodal';m.style.cssText='position:fixed;inset:0;z-index:60;background:#000b;display:none;place-items:center;padding:1rem;overflow:auto';
+ m.innerHTML='<div class="g solid card" style="max-width:500px;width:100%"><h2>🔑 Khóa AI (Gemini miễn phí)</h2><ol style="padding-left:1.2rem;font-size:.92rem"><li>Mở <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="color:var(--cy)">aistudio.google.com/apikey</a>, đăng nhập Google và tạo khóa API.</li><li>Dán khóa vào ô bên dưới, bấm “Tải danh sách model”, chọn model, bấm “Thử kết nối”, rồi “Lưu”.</li></ol><label for="kk">Khóa Gemini</label><input id="kk" type="password" autocomplete="off" placeholder="Dán khóa vào đây"><label for="km">Model</label><input id="km" list="kml" placeholder="vd: một model Flash hoặc Flash-Lite"><datalist id="kml"></datalist><div class="row"><button class="btn" onclick="loadModels()">Tải danh sách model</button><button class="btn" onclick="testKey()">Thử kết nối</button></div><div class="note" id="kst" role="status">Khóa chỉ lưu trong trình duyệt này và chỉ gửi tới Google. Đừng dùng máy công cộng. Gói miễn phí của Google có thể dùng nội dung bạn gửi để cải thiện sản phẩm, nên đừng nhập thông tin cá nhân.</div><div class="row"><button class="btn pri" onclick="saveKey()">Lưu</button><button class="btn" onclick="clearKey()">Xóa khóa</button><button class="btn" onclick="$(\'kmodal\').style.display=\'none\'">Đóng</button></div></div>';
+ document.body.append(m);
+})();
+function kst(t){$('kst').textContent=t}
+function openKey(){$('kmodal').style.display='grid';$('kk').value=GK.key;$('km').value=GK.model}
+async function loadModels(){
+ const k=$('kk').value.trim();if(!k){kst('Hãy dán khóa trước.');return}kst('Đang tải danh sách…');
+ try{const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200',{headers:{'x-goog-api-key':k},signal:AbortSignal.timeout(15000)});
+  if(!r.ok){kst('Khóa bị từ chối hoặc lỗi ('+r.status+'): '+await gErr(r));return}
+  const j=await r.json(),n=(j.models||[]).filter(x=>(x.supportedGenerationMethods||[]).includes('generateContent')).map(x=>x.name.replace('models/','')).sort((a,b)=>(/lite/.test(b)-/lite/.test(a))||(/flash/.test(b)-/flash/.test(a)));
+  $('kml').innerHTML=n.map(x=>'<option value="'+esc(x)+'">').join('');kst('Có '+n.length+' model. Bấm vào ô Model để chọn (nên thử loại Flash hoặc Flash-Lite), rồi bấm Thử kết nối.')}
+ catch(e){kst('Không kết nối được tới Google. Kiểm tra mạng rồi thử lại.')}
+}
+async function testKey(){
+ const k=$('kk').value.trim(),md=$('km').value.trim();if(!k||!md){kst('Cần nhập khóa và tên model.');return}kst('Đang thử… (tối đa 20 giây)');const t0=Date.now();
+ try{const r=await fetch(GU+encodeURIComponent(md)+':generateContent',{method:'POST',headers:{'x-goog-api-key':k,'content-type':'application/json'},body:JSON.stringify({contents:[{role:'user',parts:[{text:'Trả lời đúng một từ: OK'}]}],generationConfig:{maxOutputTokens:200}}),signal:AbortSignal.timeout(20000)});
+  const ms=((Date.now()-t0)/1000).toFixed(1);
+  kst(r.ok?'Kết nối tốt: model trả lời sau '+ms+' giây.'+(ms>8?' Hơi chậm, bạn nên thử model nhẹ hơn.':' Bạn có thể bấm Lưu.'):'Lỗi '+r.status+': '+await gErr(r))}
+ catch(e){kst(e&&e.name=='TimeoutError'?'Model không trả lời trong 20 giây. Hãy chọn model khác.':'Không kết nối được tới Google.')}
+}
+function saveKey(){GK.key=$('kk').value.trim();GK.model=$('km').value.trim()||GK.model;try{localStorage.setItem('sv_gkey',GK.key);localStorage.setItem('sv_gmodel',GK.model)}catch(e){}$('kmodal').style.display='none';toast('Đã lưu khóa AI.')}
+function clearKey(){GK.key='';try{localStorage.removeItem('sv_gkey')}catch(e){}$('kk').value='';kst('Đã xóa khóa khỏi trình duyệt này.')}
 
 </script>
 </body>
