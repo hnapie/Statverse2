@@ -8,22 +8,38 @@ const MODEL = process.env.GEMINI_MODEL || 'gemini-flash-latest';
 const bad = (s, m) => new Response(m, { status: s });
 
 export default async (req) => {
-  // Trang kiểm tra nhanh: mở https://<trang-của-bạn>/api/ask?test=1 trên trình duyệt
+  // Trang kiểm tra nhanh (mở trên trình duyệt):
+  //   /api/ask?models=1                      -> liệt kê các model dùng được với key của bạn
+  //   /api/ask?test=1                        -> thử model đang cấu hình
+  //   /api/ask?test=1&model=TÊN&wait=20      -> thử model khác, chờ tối đa 20 giây (không cần deploy lại)
   if (req.method === 'GET') {
+    const q = new URL(req.url).searchParams;
     const info = { keySet: !!process.env.GEMINI_API_KEY, model: MODEL, limitPerHour: LIMIT };
-    if (new URL(req.url).searchParams.get('test') !== '1' || !info.keySet) return Response.json(info);
+    if (!info.keySet) return Response.json(info);
+    const hdr = { 'x-goog-api-key': process.env.GEMINI_API_KEY, 'content-type': 'application/json' };
+    const clean = (t) => String(t).replace(/AIza\S+/g, '***');
+    if (q.get('models') === '1') {
+      try {
+        const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200', { headers: hdr, signal: AbortSignal.timeout(8000) });
+        const j = await r.json().catch(() => ({}));
+        const names = (j.models || []).filter((m) => (m.supportedGenerationMethods || []).includes('generateContent')).map((m) => m.name.replace('models/', ''));
+        return Response.json({ ...info, geminiStatus: r.status, models: names, error: j.error ? clean(JSON.stringify(j.error)).slice(0, 300) : undefined });
+      } catch (e) { return Response.json({ ...info, error: clean(e).slice(0, 200) }); }
+    }
+    if (q.get('test') !== '1') return Response.json(info);
+    const model = q.get('model') || MODEL;
+    const wait = Math.min(Math.max(Number(q.get('wait') || 8), 3), 25) * 1000;
     const t0 = Date.now();
     try {
-      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(MODEL)}:generateContent`, {
-        method: 'POST',
-        headers: { 'x-goog-api-key': process.env.GEMINI_API_KEY, 'content-type': 'application/json' },
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+        method: 'POST', headers: hdr,
         body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: 'Trả lời đúng một từ: OK' }] }], generationConfig: { maxOutputTokens: 200 } }),
-        signal: AbortSignal.timeout(8000),
+        signal: AbortSignal.timeout(wait),
       });
-      const txt = (await r.text()).replace(/AIza\S+/g, '***').slice(0, 400);
-      return Response.json({ ...info, geminiStatus: r.status, ms: Date.now() - t0, response: txt });
+      const txt = clean(await r.text()).slice(0, 400);
+      return Response.json({ ...info, testedModel: model, geminiStatus: r.status, ms: Date.now() - t0, response: txt });
     } catch (e) {
-      return Response.json({ ...info, error: String(e).slice(0, 200), hint: 'Gemini không trả lời trong 8 giây: model chậm hoặc mạng bị nghẽn. Thử model Flash-Lite hoặc đổi GEMINI_MODEL.' });
+      return Response.json({ ...info, testedModel: model, ms: Date.now() - t0, error: clean(e).slice(0, 200), hint: `Không có phản hồi trong ${wait / 1000} giây. Thử model khác (xem /api/ask?models=1) hoặc tăng &wait=20.` });
     }
   }
   if (req.method !== 'POST') return bad(405, 'Method not allowed');
